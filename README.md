@@ -1,3 +1,49 @@
+# Trends in Seasonal Water Deficits
+
+## Summary
+
+
+## Background and Motivation
+Why is your project important? What is known and unknown?
+
+Droughts have major impacts on fluxes between land and the atmosphere, agricultural production, and the carbon cycle. Future projections of drought magnitude and frequencies are surprisingly divergent and interpretations of trends from Earth System Model outputs have drawn conflicting pictures of drought impact trends in a heating climate. Trends in precipitation, evapotranspiration, soil moisture, and runoff often point in different directions and are relevant for different aspects of what may be referred to as a “droughts”. 
+
+## Objective
+Describe the goal of your project. What will be the result, answering what question?
+
+You will target seasonal water deficits as an impact-relevant quantity measuring the severity of droughts. Using outputs from the Climate Model Intercomparison Project Phase 6 (CMIP6), you will derive simulated cumulative water deficit (CWD) time series across the globe for multiple models and investigate their long-term trends.
+
+
+## Implementation
+
+What approach will you take to achieve the goal in terms of data and methods?
+
+Um die kumulativen Wasserdefizite zu berechnen werden folgende Variablen benötigt: 
+
+•	Evapotranspiration (ET) oder, falls ET nicht vorhanden, latent heat flux
+•	Precipitation, falls möglich separat für Regen und Schneefall
+•	Potential Evapotranspiration (PET). Falls nicht vorhanden, werden daily surface net radiation und Temperatur (daily mean) benutzt werden.
+
+Diese Daten werden im CMIP6-ng Datensatz zur Verfügung gestellt (Zitieren). Die Daten werden aus täglicher Auflösung entnommen.
+Das original (native) grid wird verwendet und die gewünschten Einheiten betragen mm day-1.
+
+Die benötigten Daten werden heruntergeladen und dann durch den CWD-Algorithmus (Zitieren) gespiesen, um die kumulativen Wasserdefizite zu berechnen.
+
+Mit dem Output, den Zeitreihen der kumulativen Wasserdefizite, werden schliesslich globale Trends analysiert. 
+
+Die Trendanalyse beinhaltet eine Regression.
+
+Einfügen: 1. Download der Daten und Vorgehen dazu
+
+## Timeline
+
+## Risks and Contingency
+
+
+## Impact
+
+
+
 # The GECO R project template
 
 This is a github template for a GECO R project repository. This template can
