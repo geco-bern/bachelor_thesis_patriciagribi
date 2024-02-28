@@ -43,6 +43,8 @@ Einfügen: 1. Download der Daten und Vorgehen dazu
 
 ## Timeline
 
+https://github.com/geco-bern/bachelor_thesis_patriciagribi/blob/main/Coordination/Timeline.xlsx 
+
 ## Risks and Contingency
 
 
