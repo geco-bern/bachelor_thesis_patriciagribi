@@ -2,6 +2,7 @@
 
 ## Summary
 
+This bachelor thesis aims to explore trends in seasonal water deficits using data from the Climate Model Intercomparison Project Phase 6 (CMIP6). The research will focus on deriving evapotranspiration, precipitation and potential evapotranspiration time series across the globe from first one, then multiple models. With the cwd-algorithm implemented by the geco-group time series of the cumulative water deficit (CWD) will be calculated and their long-term trends investigated. The thesis seeks to contribute valuable insights into the understanding of drought impacts in a changing climate and address existing uncertainties in future drought projections.
 
 ## Background and Motivation
 Why is your project important? What is known and unknown?
@@ -12,6 +13,11 @@ Droughts have major impacts on fluxes between land and the atmosphere, agricultu
 Describe the goal of your project. What will be the result, answering what question?
 
 You will target seasonal water deficits as an impact-relevant quantity measuring the severity of droughts. Using outputs from the Climate Model Intercomparison Project Phase 6 (CMIP6), you will derive simulated cumulative water deficit (CWD) time series across the globe for multiple models and investigate their long-term trends.
+
+Possible research questions: 
+
+- What are the long-term trends in cumulative water deficits globally, and how do these trends correlate with climate model outputs? Are there regions experiencing more pronounced or accelerated changes in water deficits?
+- How sensitive are the results to variations in CMIP6 models, and what level of uncertainty is associated with the derived time series of evapotranspiration, precipitation, potential evapotranspiration, and cumulative water deficits?
 
 
 ## Implementation
