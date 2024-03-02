@@ -10,7 +10,6 @@ Why is your project important? What is known and unknown?
 Droughts have major impacts on fluxes between land and the atmosphere, agricultural production, and the carbon cycle. Future projections of drought magnitude and frequencies are surprisingly divergent and interpretations of trends from Earth System Model outputs have drawn conflicting pictures of drought impact trends in a heating climate. Trends in precipitation, evapotranspiration, soil moisture, and runoff often point in different directions and are relevant for different aspects of what may be referred to as a “droughts”. 
 
 ## Objective
-Describe the goal of your project. What will be the result, answering what question?
 
 The objective of this thesis lies in targeting seasonal water deficits as an impact-relevant quantity measuring the severity of droughts. Using outputs from the Climate Model Intercomparison Project Phase 6 (CMIP6), simulated cumulative water deficit (CWD) time series across the globe for first one, then multiple models, will be derived and their long-term trends investigated.
 
@@ -33,10 +32,12 @@ The native grid is used and the desired units are mm day-1.
 
 The required data is downloaded and then fed through the CWD algorithm (cite) to obtain the cumulative water deficits.
 
+******den cwd-Algorithmus beschreiben??******
+
 Finally, the output, the time series of cumulative water deficits, is used to analyse global trends. 
 
-Die Trendanalyse beinhaltet eine Regression.
-Einfügen: 1. Download der Daten und Vorgehen dazu und erste Visualisierung der Daten
+****Die Trendanalyse beinhaltet eine Regression.
+Einfügen: 1. Download der Daten und Vorgehen, Beschreibung wie die Daten aussehen dazu und erste Visualisierung der Daten***
 
 ## Timeline
 
@@ -58,5 +59,9 @@ Finally, it'll be difficult to determine how deeply to analyze the data to make 
 
 
 ## Impact
+
+This research project aims to contribute to our understanding of trends in cumulative water deficits across the globe.
+
+relationship cwd and droughts
 
 
