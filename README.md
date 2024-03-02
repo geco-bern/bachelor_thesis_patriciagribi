@@ -22,24 +22,21 @@ Possible research questions:
 
 ## Implementation
 
-What approach will you take to achieve the goal in terms of data and methods?
+The content of this work involves computing the cumulative water deficits. The following variables are required for this purpose: 
 
-Um die kumulativen Wasserdefizite zu berechnen werden folgende Variablen benötigt: 
+- Evapotranspiration (ET) or, if ET is not available, latent heat flux
+- Precipitation (for rain and snowfall)
+- Potential evapotranspiration (PET). If not available, daily surface net radiation and temperature (daily mean) will be used.
 
-•	Evapotranspiration (ET) oder, falls ET nicht vorhanden, latent heat flux
-•	Precipitation, falls möglich separat für Regen und Schneefall
-•	Potential Evapotranspiration (PET). Falls nicht vorhanden, werden daily surface net radiation und Temperatur (daily mean) benutzt werden.
+These data are provided in the CMIP6-ng dataset (citation). The data is taken on a daily resolution.
+The native grid is used and the desired units are mm day-1.
 
-Diese Daten werden im CMIP6-ng Datensatz zur Verfügung gestellt (Zitieren). Die Daten werden aus täglicher Auflösung entnommen.
-Das original (native) grid wird verwendet und die gewünschten Einheiten betragen mm day-1.
+The required data is downloaded and then fed through the CWD algorithm (cite) to obtain the cumulative water deficits.
 
-Die benötigten Daten werden heruntergeladen und dann durch den CWD-Algorithmus (Zitieren) gespiesen, um die kumulativen Wasserdefizite zu berechnen.
-
-Mit dem Output, den Zeitreihen der kumulativen Wasserdefizite, werden schliesslich globale Trends analysiert. 
+Finally, the output, the time series of cumulative water deficits, is used to analyse global trends. 
 
 Die Trendanalyse beinhaltet eine Regression.
-
-Einfügen: 1. Download der Daten und Vorgehen dazu
+Einfügen: 1. Download der Daten und Vorgehen dazu und erste Visualisierung der Daten
 
 ## Timeline
 
@@ -49,7 +46,7 @@ https://github.com/geco-bern/bachelor_thesis_patriciagribi/blob/main/Coordinatio
 
 This Bachelor's thesis presents several challenges in dealing with large amounts of data and the use of complex analysis methods. 
 
-A significant risk lies in the difficulty of accessing data due to the enormous volumes of data. Downloading the data is time-consuming due to its size and requires resources that exceed the capacity of a conventional laptop. The solution is to use a server to speed up the download process and enable efficient data management.
+A significant risk lies in the difficulty of accessing the needed data due to the enormous volumes of it. Downloading the data is time-consuming due to its size and requires resources that exceed the capacity of a conventional laptop. The solution is to use a server to speed up the download process and enable efficient data management.
 
 The enormous amount of data requires a precise selection of the variables, the model and the spatial extent. The challenge is to identify and select the required data points in order to enable an efficient calculation of cumulative water deficits (CWD). The focus is initially placed on individual grid points. An iterative process is carried out to gradually increase the amount of data to finally obtain global time series.
 
