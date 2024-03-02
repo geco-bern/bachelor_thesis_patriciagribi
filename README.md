@@ -5,7 +5,6 @@
 This bachelor thesis aims to explore trends in seasonal water deficits using data from the Climate Model Intercomparison Project Phase 6 (CMIP6). The research will focus on deriving evapotranspiration, precipitation and potential evapotranspiration time series across the globe from first one, then multiple models. With the cwd-algorithm implemented by the geco-group time series of the cumulative water deficit (CWD) will be calculated and their long-term trends investigated. The thesis seeks to contribute valuable insights into the understanding of drought impacts in a changing climate and address existing uncertainties in future drought projections.
 
 ## Background and Motivation
-Why is your project important? What is known and unknown?
 
 Droughts have major impacts on fluxes between land and the atmosphere, agricultural production, and the carbon cycle. Future projections of drought magnitude and frequencies are surprisingly divergent and interpretations of trends from Earth System Model outputs have drawn conflicting pictures of drought impact trends in a heating climate. Trends in precipitation, evapotranspiration, soil moisture, and runoff often point in different directions and are relevant for different aspects of what may be referred to as a “droughts”. 
 
@@ -27,17 +26,14 @@ The content of this work involves computing the cumulative water deficits. The f
 - Precipitation (for rain and snowfall)
 - Potential evapotranspiration (PET). If not available, daily surface net radiation and temperature (daily mean) will be used.
 
-These data are provided in the CMIP6-ng dataset (citation). The data is taken on a daily resolution.
+These data are provided in the CMIP6-ng dataset (Brunner et al., 2020). The data is taken on a daily resolution.
 The native grid is used and the desired units are mm day-1.
 
-The required data is downloaded and then fed through the CWD algorithm (cite) to obtain the cumulative water deficits.
-
-******den cwd-Algorithmus beschreiben??******
+The required data is downloaded and then fed through the CWD-algorithm (cite) to obtain the cumulative water deficits.
 
 Finally, the output, the time series of cumulative water deficits, is used to analyse global trends. 
 
-****Die Trendanalyse beinhaltet eine Regression.
-Einfügen: 1. Download der Daten und Vorgehen, Beschreibung wie die Daten aussehen dazu und erste Visualisierung der Daten***
+****Einfügen: 1. Download der Daten und Vorgehen, Beschreibung wie die Daten aussehen dazu und erste Visualisierung der Daten***
 
 ## Timeline
 
@@ -57,11 +53,16 @@ The data must meet the specific requirements of the CWD algorithm to ensure that
 
 Finally, it'll be difficult to determine how deeply to analyze the data to make meaningful conclusions and share interesting findings. To target this issue, it'll be important to maintain a constant dialogue with the supervisor.
 
-
 ## Impact
 
 This research project aims to contribute to our understanding of trends in cumulative water deficits across the globe.
 
 relationship cwd and droughts
+
+## Literature
+
+Brunner, L., Hauser, M., Lorenz, R., and Beyerle, U.: The ETH Zurich CMIP6 next generation archive: technical documentation, https://doi.org/10.5281/zenodo.3734128, 2020.
+
+
 
 
