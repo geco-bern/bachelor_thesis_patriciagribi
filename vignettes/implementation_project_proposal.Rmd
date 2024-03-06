@@ -1,0 +1,32 @@
+---
+title: "Proposal: Implementation"
+author: "Patricia Gribi"
+date: "2024-03-06"
+output: html_document
+---
+
+# The CMIP6-ng Data
+
+## Loading Data
+
+
+```{r}
+
+library(terra)
+
+r <- rast("/data/scratch/CMIP6ng/cmip6-ng/pr/day/native/pr_day_CESM2_historical_r1i1p1f1_native.nc", lyrs = "pr_1")
+
+plot(r)
+
+```
+
+## Descriptions and Visualizations
+
+there are the variables:
+- pr: precipitation, is available per day, native grid
+- rlds:
+- tas:
+- tran: 
+
+
+
