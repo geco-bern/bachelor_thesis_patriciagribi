@@ -7,20 +7,47 @@ output: html_document
 
 What approach will you take to achieve the goal in terms of data and methods?
 
+
 # The CMIP6-ng Data
 
-## Loading Data
+## Data Structure
 
 
 ```{r}
 
 library(terra)
 
-r <- rast("/data/scratch/CMIP6ng/cmip6-ng/pr/day/native/pr_day_CESM2_historical_r1i1p1f1_native.nc", lyrs = "pr_1")
+r <- rast("/data/scratch/CMIP6ng/cmip6-ng/pr/day/native/pr_day_CESM2_historical_r1i1p1f1_native.nc") #, lyrs = "pr_1")
+print(r)
+
+# time(r) from when to when
+# names(r) names of the layers
+
+
+```
+3 dimensional, rows and cols representing longitude and latitude so a point on the grid,layers represent time, time ranges from 01.01.1850 until 31.12.2014. 
+
+what is meant by resolution?
+
+extent: special grid because only positive longitude
+therefore transformations
+
+Raster data: The basic raster model represents geographic (2D) continuous data as a two-dimensional array, where each position has a geographic (x, y) coordinate, a cell size (or resolution) and a given extent. In most geographic applications, coordinates are referenced and correspond to a geographic position, e.g., a particular latitude and longitude. Often, the model is expanded with a time dimension, stacking various two-dimensional arrays into a three-dimensional array.
+
+
+look at cwd algorithm and if units are changed into desired ones.
+
+
+## First Visualizations
+
+
+```{r}
 
 plot(r)
 
 ```
+
+
 
 ## Description and Variable Selection
 
@@ -68,11 +95,6 @@ Variable Selection Suggestions:
 - Evapotranspiration: take sum of Transpiration and Evaporation
 - Potential Evapotranspiration or daily surface net radiation??
 
-
-
-## Data Structure 
-
-## First Visualizations
 
 
 # Methods
