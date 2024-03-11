@@ -12,7 +12,7 @@ Droughts have major impacts on fluxes between land and the atmosphere, agricultu
 
 The objective of this thesis lies in targeting seasonal water deficits as an impact-relevant quantity measuring the severity of droughts. Using outputs from the Climate Model Intercomparison Project Phase 6 (CMIP6), simulated cumulative water deficit (CWD) time series across the globe for first one, then multiple models, will be derived and their long-term trends investigated.
 
-Possible research questions: 
+The aim especially will be to answer following question: 
 
 - What are the long-term trends in cumulative water deficits globally, and how do these trends correlate with climate model outputs (single variables for instance temperature, precipitation...)? Are there regions experiencing more pronounced or accelerated changes in water deficits?
 
