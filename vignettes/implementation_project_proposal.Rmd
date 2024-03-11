@@ -3,13 +3,14 @@ title: "Proposal: Implementation"
 author: "Patricia Gribi"
 date: "2024-03-06"
 output: html_document
+editor_options: 
+  markdown: 
+    wrap: 72
 ---
-
 
 # The CMIP6-ng Data
 
 ## Data Structure
-
 
 ```{r}
 
@@ -24,29 +25,29 @@ print(r)
 
 ```
 
-This raster data is 3-dimensional array consisting of 192 rows, 288 columns, and 
-60225 layers. The rows and columns correspond to longitude and latitude, 
-respectively, while the layers denote distinct temporal intervals. In this data 
-set each layer spans one day. The temporal sequence is delineated along the 
-time-row including the period from January 1, 1850, to December 31, 2014.
+This raster data is 3-dimensional array consisting of 192 rows, 288
+columns, and 60225 layers. The rows and columns correspond to longitude
+and latitude, respectively, while the layers denote distinct temporal
+intervals. In this data set each layer spans one day. The temporal
+sequence is delineated along the time-row including the period from
+January 1, 1850, to December 31, 2014.
 
-The row resolution indicates the spatial resolution of the raster data. The grid
-cells measure 1.25 units in the x-direction and 0.9424084 units in the 
-y-direction.
+The row resolution indicates the spatial resolution of the raster data.
+The grid cells measure 1.25 units in the x-direction and 0.9424084 units
+in the y-direction.
 
-The raster's extent defines the spatial boundaries in terms of minimum and 
-maximum values for longitude (x) and latitude (y). This data set covers a global
-extent. A grid transformation will have to be conducted, as the current format 
-exclusively accommodates positive values. In non-climatic models, it is 
-conventional to define longitude within the range of -180 to 180 and latitude 
-within -90 to 90.
+The raster's extent defines the spatial boundaries in terms of minimum
+and maximum values for longitude (x) and latitude (y). This data set
+covers a global extent. A grid transformation will have to be conducted,
+as the current format exclusively accommodates positive values. In
+non-climatic models, it is conventional to define longitude within the
+range of -180 to 180 and latitude within -90 to 90.
 
-The variable represented by the raster is in this case precipitaton. The unit of
-measurement for the values is kilograms per square meter per second.
-
+The variable represented by the raster is in this case precipitaton. The
+unit of measurement for the values is kilograms per square meter per
+second.
 
 ## First Visualizations
-
 
 ```{r}
 
@@ -54,65 +55,53 @@ plot(r)
 
 ```
 
-
-
 ## Variable Selection
 
-A large part of this work consists of calculating globally the cumulative water 
-deficits using the cwd-algorithm already developed by the GECO-group. The time 
-series obtained provide the basis for the following trend analyses.
-Certain variables are required for this purpose. These are provided by the 
-CMIP6-ng data set (Brunner et al., 2020).
+A large part of this work consists of calculating globally the
+cumulative water deficits using the cwd-algorithm already developed by
+the GECO-group. The time series obtained provide the basis for the
+following trend analyses. Certain variables are required for this
+purpose. These are provided by the CMIP6-ng data set (Brunner et al.,
+2020).
 
-In order to create representative time series, the data should be available at 
-daily resolution. The desired units are mm day-1.
+In order to create representative time series, the data should be
+available at daily resolution. The desired units are mm day-1.
 
+The following variables have already been downloaded on the workstation
+2:
 
-The following variables have already been downloaded on the workstation 2: 
+-   **pr**: **Precipitation**, is available per day, on the native grid
+    with units kg m-2 s-1
+-   **rlds**: **Surface Downwelling Longwave Radiation**, monthly
+    available, on the native grid with units W m-2
+-   **tas**: **Near-Surface Air Temperature**, daily available, as well
+    on the native grid, in K
+-   **tran**: **Transpiration**, is available per month, on the native
+    grid with units kg m-2 s-1
 
-- **pr**: **Precipitation**, is available per day, on the native grid with units 
-kg m-2 s-1
-- **rlds**: **Surface Downwelling Longwave Radiation**, monthly available, on 
-the native grid with units W m-2
-- **tas**: **Near-Surface Air Temperature**, daily available, as well on the 
-native grid, in K
-- **tran**: **Transpiration**, is available per month, on the native grid with 
-units kg m-2 s-1
-
-Native grid: either data reported on a model's native grid, regridded data
-reported on the data provider's preferred target grid, regridded data reported 
-on a grid other than the native grid and other than the preferred target grid
-or global mean data. Priorities descending. (p.4)
-
+Native grid: either data reported on a model's native grid, regridded
+data reported on the data provider's preferred target grid, regridded
+data reported on a grid other than the native grid and other than the
+preferred target grid or global mean data. Priorities descending. (p.4)
 
 Variables needed:
 
-- **Evapotranspiration (ET)** or, if ET is not available, **latent heat flux** 
-(in energy units W m-2). To convert ET into mass units the following variables 
-are required according to the cwd algorithm: temperature, latent heat flux and 
-atmospheric pressure (Pa).
-- **Precipitation** (for rain and snowfall)
-- **Potential Evapotranspiration (PET)**. If not available, **daily surface net
-radiation and temperature** (daily mean)
+-   **Evapotranspiration (ET)** or, if ET is not available, **latent
+    heat flux** (in energy units W m-2). To convert ET into mass units
+    the following variables are required according to the cwd algorithm:
+    temperature, latent heat flux and atmospheric pressure (Pa).
+-   **Precipitation** (for rain and snowfall)
+-   **Potential Evapotranspiration (PET)**. If not available, **daily
+    surface net radiation and temperature** (daily mean)
 
-Furthermore the cwd-algorithm expects a variable representing daily soil water 
-balance (infilatration minus evapotranspiration).
+The cwd-algorithm expects a variable representing daily soil water
+balance (infiltration as precipitation minus evapotranspiration).
 
+Variables missing: - Evapotranspiration or latent heat flux - Potential
+Evapotranspiration or daily surface net radiation
 
-Variables missing:
-- Evapotranspiration or latent heat flux
-- Potential Evapotranspiration or daily surface net radiation
-
-
-Variable Selection Suggestions: 
-- Evapotranspiration: take sum of Transpiration and Evaporation
-- Potential Evapotranspiration or daily surface net radiation??
-
+Variable Selection Suggestions: - Evapotranspiration: take sum of
+Transpiration and Evaporation - Potential Evapotranspiration or daily
+surface net radiation??
 
 # Methods
-
-
-
-
-
-
