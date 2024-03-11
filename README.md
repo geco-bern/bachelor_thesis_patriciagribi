@@ -20,20 +20,7 @@ Possible research questions:
 
 ## Implementation
 
-The content of this work involves computing the cumulative water deficits. The following variables are required for this purpose: 
-
-- Evapotranspiration (ET) or, if ET is not available, latent heat flux
-- Precipitation (for rain and snowfall)
-- Potential evapotranspiration (PET). If not available, daily surface net radiation and temperature (daily mean) will be used.
-
-These data are provided in the CMIP6-ng dataset (Brunner et al., 2020). The data is taken on a daily resolution.
-The native grid is used and the desired units are mm day-1.
-
-The required data is downloaded and then fed through the CWD-algorithm (cite) to obtain the cumulative water deficits.
-
-Finally, the output, the time series of cumulative water deficits, is used to analyse global trends. 
-
-****Einfügen: 1. Download der Daten und Vorgehen, Beschreibung wie die Daten aussehen dazu und erste Visualisierung der Daten***
+https://github.com/geco-bern/bachelor_thesis_patriciagribi/blob/main/vignettes/implementation_project_proposal.Rmd
 
 ## Timeline
 
