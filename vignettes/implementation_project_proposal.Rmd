@@ -23,6 +23,7 @@ print(r)
 
 
 ```
+
 This raster data is 3-dimensional array consisting of 192 rows, 288 columns, and 60225 layers. The rows and columns correspond to longitude and latitude, respectively, while the layers denote distinct temporal intervals. In this data set each layer spans one day. The temporal sequence is delineated along the time-row including the period from January 1, 1850, to December 31, 2014.
 
 The row resolution indicates the spatial resolution of the raster data. The grid cells measure 1.25 units in the x-direction and 0.9424084 units in the y-direction.
@@ -78,6 +79,7 @@ Variables needed:
 - **Precipitation** (for rain and snowfall)
 - **Potential Evapotranspiration (PET)**. If not available, **daily surface net
 radiation and temperature** (daily mean)
+
 Furthermore the cwd-algorithm expects a variable representing daily soil water balance (infilatration minus evapotranspiration).
 
 
