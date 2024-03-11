@@ -15,8 +15,6 @@ The objective of this thesis lies in targeting seasonal water deficits as an imp
 Possible research questions: 
 
 - What are the long-term trends in cumulative water deficits globally, and how do these trends correlate with climate model outputs (single variables for instance temperature, precipitation...)? Are there regions experiencing more pronounced or accelerated changes in water deficits?
-- How sensitive are the results to variations in CMIP6 models, and what level of uncertainty is associated with the derived time series of evapotranspiration, precipitation, potential evapotranspiration, and cumulative water deficits?
-
 
 ## Implementation
 
