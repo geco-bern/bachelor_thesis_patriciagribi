@@ -25,12 +25,14 @@ print(r)
 
 ```
 
-This raster data is 3-dimensional array consisting of 192 rows, 288
-columns, and 60225 layers. The rows and columns correspond to longitude
-and latitude, respectively, while the layers denote distinct temporal
-intervals. In this data set each layer spans one day. The temporal
-sequence is delineated along the time-row including the period from
-January 1, 1850, to December 31, 2014.
+To give an example about the structure of the cmip6 data the variable
+precipitation was loaded in r. The cmip6-ng data is raster data, whose
+data type is a 3-dimensional array and in this example consisting of 192
+rows, 288 columns, and 60225 layers. The rows and columns correspond to
+longitude and latitude, respectively, while the layers denote distinct
+temporal intervals. In this data set each layer spans one day. The
+temporal sequence is delineated along the time-row including the period
+from January 1, 1850, to December 31, 2014.
 
 The row resolution indicates the spatial resolution of the raster data.
 The grid cells measure 1.25 units in the x-direction and 0.9424084 units
@@ -38,16 +40,15 @@ in the y-direction.
 
 The raster's extent defines the spatial boundaries in terms of minimum
 and maximum values for longitude (x) and latitude (y). This data set
-covers a global extent. A grid transformation will have to be conducted,
-as the current format exclusively accommodates positive values. In
-non-climatic models, it is conventional to define longitude within the
-range of -180 to 180 and latitude within -90 to 90.
+covers a global extent. A grid transformation will have to be conducted
+eventually, as the current format exclusively accommodates positive
+values. In non-climatic models, it is conventional to define longitude
+within the range of -180 to 180 and latitude within -90 to 90.
 
-The variable represented by the raster is in this case precipitaton. The
-unit of measurement for the values is kilograms per square meter per
+The unit of measurement for the values is kilograms per square meter per
 second.
 
-## First Visualizations
+## Visualizations
 
 ```{r}
 
@@ -65,24 +66,8 @@ purpose. These are provided by the CMIP6-ng data set (Brunner et al.,
 2020).
 
 In order to create representative time series, the data should be
-available at daily resolution. The desired units are mm day-1.
-
-The following variables have already been downloaded on the workstation
-2:
-
--   **pr**: **Precipitation**, is available per day, on the native grid
-    with units kg m-2 s-1
--   **rlds**: **Surface Downwelling Longwave Radiation**, monthly
-    available, on the native grid with units W m-2
--   **tas**: **Near-Surface Air Temperature**, daily available, as well
-    on the native grid, in K
--   **tran**: **Transpiration**, is available per month, on the native
-    grid with units kg m-2 s-1
-
-Native grid: either data reported on a model's native grid, regridded
-data reported on the data provider's preferred target grid, regridded
-data reported on a grid other than the native grid and other than the
-preferred target grid or global mean data. Priorities descending. (p.4)
+available at daily resolution. If daily data was not available, a
+monthly resolution was taken. The desired units are mm day-1.
 
 Variables needed:
 
@@ -90,18 +75,65 @@ Variables needed:
     heat flux** (in energy units W m-2). To convert ET into mass units
     the following variables are required according to the cwd algorithm:
     temperature, latent heat flux and atmospheric pressure (Pa).
--   **Precipitation** (for rain and snowfall)
 -   **Potential Evapotranspiration (PET)**. If not available, **daily
     surface net radiation and temperature** (daily mean)
+-   **Precipitation** (for rain and snowfall)
 
-The cwd-algorithm expects a variable representing daily soil water
-balance (infiltration as precipitation minus evapotranspiration).
+Following variables have been downloaded:
 
-Variables missing: - Evapotranspiration or latent heat flux - Potential
-Evapotranspiration or daily surface net radiation
+-   **hfls**: **Surface Upward Latent Heat Flux**, available monthly, on
+    the native grid, units W m-2
+-   **rlds**: **Surface Downwelling Longwave Radiation**, monthly
+    available, on the native grid with units W m-2
+-   **rlus:** **Surface Upwelling Longwave Radiation**, monthly
+    available, on the native grid with units W m-2
+-   **rsds**: **Surface Downwelling Shortwave Radiation**, available per
+    month, on the native grid with units W m-2
+-   **rsus**: **Surface Upwelling Shortwave Radiation**, monthly
+    available, on the native grid with units W m-2
+-   **tas**: **Near-Surface Air Temperature**, daily available, as well
+    on the native grid, in K
+-   **tran**: **Transpiration**, is available per month, on the native
+    grid with units kg m-2 s-1
+-   **pr**: **Precipitation**, is available per day, on the native grid
+    with units kg m-2 s-1
 
-Variable Selection Suggestions: - Evapotranspiration: take sum of
-Transpiration and Evaporation - Potential Evapotranspiration or daily
-surface net radiation??
+\* **Native grid:** according to CMIP6-ng data set (Brunner et al.,
+2020) the native grid corresponds to either data reported on a model's
+native grid, regridded data reported on the data provider's preferred
+target grid, regridded data reported on a grid other than the native
+grid and other than the preferred target grid or global mean data. The
+priorities follow a descending order.
+
+As evapotranspiration the surface upward latent heat flux variable will
+be utilised. The units will be converted to mass units with the provided
+function in the cwd-algorithm. For the conversion, atmospheric pressure
+(Pa) is a necessary parameter. To be able to perform the calculations, a
+default value for atmospheric pressure will be assumed.
+
+Regarding the variables, there is no potential evapotranspiration
+available. To obtain it, instead daily surface net radiation will be
+used. This is comprised of the variables surface down- and upwelling
+long- and shortwave radiation, as well as temperature.
+
+Moreover, there is only precipitation contained as a variable with no
+distinction of snow. Consequently the snow will be modelled, again with
+a provided function by the cwd-algorithm.
+
+The reason for the distinction between snow and precipitation is because
+snow-melt affects the cwd at a later point in time. (citation)
 
 # Methods
+
+what the cwd algorithm does and what is needed for it to calculate the
+cwd
+
+The cwd-algorithm expects a variable representing the daily soil water
+balance (infiltration as precipitation minus evapotranspiration).
+
+In this work, the following 2 approaches are used to calculate the
+cumulative water deficit. The 1st approach is based on the calculation
+cwd = ET
+- P. The 2nd approach is based on the calculation pcwd = PET - P. After
+the
+calculations carried out by the algorithm, the trends will be analyzed
