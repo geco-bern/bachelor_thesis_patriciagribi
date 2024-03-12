@@ -1,12 +1,15 @@
 # Trends in Seasonal Water Deficits
 
+
 ## Summary
 
 This bachelor thesis aims to explore trends in seasonal water deficits using data from the Climate Model Intercomparison Project Phase 6 (CMIP6). The research will focus on deriving evapotranspiration, precipitation and potential evapotranspiration time series across the globe from first one, then multiple models. With the cwd-algorithm implemented by the geco-group time series of the cumulative water deficit (CWD) will be calculated and their long-term trends investigated. The thesis seeks to contribute valuable insights into the understanding of drought impacts in a changing climate and address existing uncertainties in future drought projections.
 
+
 ## Background and Motivation
 
 Droughts have major impacts on fluxes between land and the atmosphere, agricultural production, and the carbon cycle. Future projections of drought magnitude and frequencies are surprisingly divergent and interpretations of trends from Earth System Model outputs have drawn conflicting pictures of drought impact trends in a heating climate. Trends in precipitation, evapotranspiration, soil moisture, and runoff often point in different directions and are relevant for different aspects of what may be referred to as a “droughts”. 
+
 
 ## Objective
 
@@ -16,13 +19,53 @@ The aim especially will be to answer following question:
 
 - What are the long-term trends in cumulative water deficits globally, and how do these trends correlate with climate model outputs (single variables for instance temperature, precipitation...)? Are there regions experiencing more pronounced or accelerated changes in water deficits?
 
+
 ## Implementation
 
+### Methods
+
+A large part of this work consists of calculating globally the cumulative water deficits using the CWD-algorithm implemented by the R package cwd (Stocker, 2021). The time series obtained provide the basis for the following trend analyses. Certain variables are required for this purpose. These are provided by the CMIP6-ng data set (Brunner et al., 2020).
+
+In order to create representative time series, the data should be available at daily resolution. If daily data was not available, a monthly resolution was chosen. The desired units are mm day-1.
+
+The CWD is determined in this work from the cumulative difference of actual ET and the liquid-water infiltration to the soil. The CWD-algorithm expects a variable representing the daily soil water balance (evapotranspiration - liquid-water infiltration to the soil as precipitation and/or snowmelt) and then is summed up daily as long as the rain has not reduced the running sum to zero. The same calculation is applied to the 2nd approach taken but based on potential evapotranspiration.  (Stocker et al., 2023)
+
+### Variable Selection
+
+Variables needed:
+
+- **Evapotranspiration (ET)** or, if ET is not available, **latent heat flux** (in energy units W m-2). To convert ET into mass units the following variables are required according to the CWD-algorithm: temperature, latent heat flux and atmospheric pressure (Pa).
+- **Potential Evapotranspiration (PET)**. If not available, **daily surface net radiation** and **temperature** (daily mean)
+- **Precipitation** (for rain and snowfall)
+
+Following variables have been downloaded:
+
+- **hfls**: **Surface Upward Latent Heat Flux**, available monthly, on the native grid, units W m-2
+- **rlds**: **Surface Downwelling Longwave Radiation**, monthly available, on the native grid with units W m-2
+- **rlus**: **Surface Upwelling Longwave Radiation**, monthly available, on the native grid with units W m-2
+- **rsds**: **Surface Downwelling Shortwave Radiation**, available per month, on the native grid with units W m-2
+- **rsus**: **Surface Upwelling Shortwave Radiation**, monthly available, on the native grid with units W m-2
+- **tas**: **Near-Surface Air Temperature**, daily available, as well on the native grid, in K
+- **tran**: **Transpiration**, is available per month, on the native grid with units kg m-2 s-1
+- **pr**: **Precipitation**, is available per day, on the native grid with units kg m-2 s-1
+
+* Native grid: according to CMIP6-ng data set (Brunner et al., 2020) the native grid corresponds to either data reported on a model's native grid, regridded data reported on the data provider's preferred target grid, regridded data reported on a grid other than the native grid and other than the preferred target grid or global mean data. The priorities follow a descending order.
+
+As evapotranspiration the surface upward latent heat flux variable will be utilised. The units will be converted to mass units with the provided function in the CWD-algorithm. For the conversion, atmospheric pressure (Pa) is a necessary parameter. To be able to perform the calculations, a default value for atmospheric pressure will be assumed.
+
+Regarding the variables, there is no potential evapotranspiration available. To obtain it, instead daily surface net radiation will be used. This is comprised of the variables surface down- and upwelling long- and shortwave radiation, as well as temperature.
+
+Moreover, there is only precipitation contained as a variable with no distinction of snow. Consequently the snow will be modeled, again with a provided function by the CWD-algorithm. The reason for the distinction between snow and precipitation is due to the effect of snowpack as a temporary water storage that supplies the infiltration to the soil during spring and early summer (Stocker et al., 2023).
+
+### Data Structure and Visualizations
+
 https://github.com/geco-bern/bachelor_thesis_patriciagribi/blob/main/vignettes/implementation_project_proposal.Rmd
+
 
 ## Timeline
 
 https://github.com/geco-bern/bachelor_thesis_patriciagribi/blob/main/Coordination/Timeline.xlsx 
+
 
 ## Risks and Contingency
 
