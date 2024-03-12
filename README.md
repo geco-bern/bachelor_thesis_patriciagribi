@@ -32,7 +32,7 @@ A significant risk lies in the difficulty of accessing the needed data due to th
 
 The enormous amount of data requires a precise selection of the variables, the model and the spatial extent. The challenge is to identify and select the required data points in order to enable an efficient calculation of cumulative water deficits (CWD). The focus is initially placed on individual grid points. An iterative process is carried out to gradually increase the amount of data to finally obtain global time series.
 
-Another difficulty is not only the quantity but also the complexity of the data structures. The challenge lies in finding your way through the extensive data and ensuring that the selected data represents the required information.
+Another difficulty is not only the quantity but also the complexity of the data structures. The challenge lies in finding the way through the extensive data and ensuring that the selected data represents the required information.
 
 The data must meet the specific requirements of the CWD algorithm to ensure that the analysis runs smoothly. The challenge lies in ensuring that the selected data is available in a format suitable for the algorithm.
 
@@ -40,9 +40,7 @@ Finally, it'll be difficult to determine how deeply to analyze the data to make 
 
 ## Impact
 
-This research project aims to contribute to our understanding of trends in cumulative water deficits across the globe.
-
-relationship cwd and droughts
+This research project aims to contribute to our understanding of trends in cumulative water deficits across the globe. The cwd algorithm has never been applied to the CMIP6 data, nor to models with future projections. In general, the daily resolution and the units in mm help to establish a concrete link to the storage capacity of the soil and the soil depth. Finally, the results allow direct and concrete conclusions to be drawn.
 
 ## Literature
 
