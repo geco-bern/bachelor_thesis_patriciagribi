@@ -10,11 +10,7 @@ This bachelor thesis aims to explore trends in seasonal water deficits using dat
 
 With further climate change droughts are projected to become more frequent and more intense in many regions of our planet (Calvin et al., 2023). Droughts impose major impacts on fluxes between land and the atmosphere, agricultural production, and the carbon cycle. For example they show a decrease in photosynthesis and tree mortaility (Doughty et al., 2015). Droughts are prolonged dry periods in the natural climate cycle (Drought, 2024) and they occur with the absence of water (Definition of Drought | Did You Know? | National Centers for Environmental Information (NCEI), 2024). 
 
-
-Measurements: Relevant variables for detecting and measuring droughts are precipitation, soil moisture, evapotranspiration and runoff. Therefore trends in these can be important for detecting droughts.
-
-
-Future projections of drought magnitude and frequencies are surprisingly divergent and interpretations of trends from Earth System Model outputs have drawn conflicting pictures of drought impact trends in a heating climate. Trends in precipitation, evapotranspiration, soil moisture, and runoff often point in different directions and are relevant for different aspects of what may be referred to as a “droughts”. 
+Relevant variables for defining and measuring droughts are precipitation, soil moisture, evapotranspiration and runoff. Therefore examine trends in those is relevant for different aspects concerning the detection and understanding of droughts. 
 
 
 ## Objective
@@ -23,7 +19,7 @@ The objective of this thesis lies in targeting seasonal water deficits as an imp
 
 The aim especially will be to answer following question: 
 
-- What are the long-term trends in cumulative water deficits globally, and how do these trends correlate with climate model outputs (single variables for instance temperature, precipitation...)? Are there regions experiencing more pronounced or accelerated changes in water deficits?
+- What are the long-term trends in cumulative water deficits globally, and how do these trends correlate with the CMIP6-ng model outputs? Are there regions experiencing more pronounced or accelerated changes in water deficits?
 
 
 ## Implementation
@@ -89,7 +85,7 @@ Finally, it'll be difficult to determine how deeply to analyze the data to make 
 
 ## Impact
 
-This research project aims to contribute to our understanding of trends in cumulative water deficits across the globe. The cwd algorithm has never been applied to the CMIP6 data, nor to models with future projections. In general, the daily resolution and the units in mm help to establish a concrete link to the storage capacity of the soil and the soil depth. Finally, the results allow direct and concrete conclusions to be drawn.
+This research project aims to contribute to our understanding of trends in cumulative water deficits across the globe. This CWD-algorithm has never been applied to the CMIP6 data, nor to models with future projections. In general, the daily resolution and the units considered (mm) help to establish a concrete link to the storage capacity of the soil and the soil depth. Finally, the results will allow direct and concrete conclusions to be drawn.
 
 ## Literature
 
