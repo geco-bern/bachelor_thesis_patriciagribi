@@ -10,6 +10,8 @@ This bachelor thesis aims to explore trends in seasonal water deficits using dat
 
 With further climate change droughts are projected to become more frequent and more intense in many regions of our planet (Calvin et al., 2023).
 
+Impacts of droughts: decrease in photosynthesis, tree mortaility (Doughty et al., 2015).
+
 Droughts have major impacts on fluxes between land and the atmosphere, agricultural production, and the carbon cycle. Future projections of drought magnitude and frequencies are surprisingly divergent and interpretations of trends from Earth System Model outputs have drawn conflicting pictures of drought impact trends in a heating climate. Trends in precipitation, evapotranspiration, soil moisture, and runoff often point in different directions and are relevant for different aspects of what may be referred to as a “droughts”. 
 
 
