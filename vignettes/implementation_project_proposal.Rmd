@@ -14,9 +14,16 @@ editor_options:
 
 ```{r}
 
+# load libraries
 library(terra)
 
-r <- rast("/data/scratch/CMIP6ng/cmip6-ng/pr/day/native/pr_day_CESM2_historical_r1i1p1f1_native.nc") #, lyrs = "pr_1")
+
+# historical data 
+#r <- rast("/data/scratch/CMIP6ng/cmip6-ng/pr/day/native/pr_day_CESM2_historical_r1i1p1f1_native.nc") 
+
+# ssp585 data
+r <- rast("/home/patricia/data_download/CMIP6ng_download/cmip6-ng/pr/day/native/pr_day_CESM2_ssp585_r1i1p1f1_native.nc") #, lyrs = "pr_1")
+
 print(r)
 
 # time(r) from when to when
@@ -28,11 +35,11 @@ print(r)
 To give an example about the structure of the cmip6 data the variable
 precipitation was loaded in r. The cmip6-ng data is raster data, whose
 data type is a 3-dimensional array and in this example consisting of 192
-rows, 288 columns, and 60225 layers. The rows and columns correspond to
+rows, 288 columns, and 31'390 layers. The rows and columns correspond to
 longitude and latitude, respectively, while the layers denote distinct
 temporal intervals. In this data set each layer spans one day. The
 temporal sequence is delineated along the time-row including the period
-from January 1, 1850, to December 31, 2014.
+from January 1, 2015, to December 31, 2100.
 
 The row resolution indicates the spatial resolution of the raster data.
 The grid cells measure 1.25 units in the x-direction and 0.9424084 units
@@ -52,6 +59,10 @@ second.
 
 ```{r}
 
-plot(r)
+layer_1 <- rast("/home/patricia/data_download/CMIP6ng_download/cmip6-ng/pr/day/native/pr_day_CESM2_ssp585_r1i1p1f1_native.nc", lyrs = "pr_1")
+
+plot(layer_1, xlab = "Latitude", 
+          ylab = "Longitude", 
+          main = "Layer 1: Precipitation CMIP6ng-data")
 
 ```
