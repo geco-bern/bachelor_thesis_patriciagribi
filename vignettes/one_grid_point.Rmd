@@ -1,0 +1,158 @@
+---
+title: "One Grid Point"
+author: "Patricia Gribi"
+date: "2024-03-19"
+output: html_document
+---
+
+
+# Read Data
+
+
+
+```{r}
+
+# libraries
+
+library(terra)
+library(readr)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(viridis)
+library(viridisLite)
+library(weathermetrics)
+library(ncdf4)
+library(chron)
+library(RColorBrewer)
+library(lattice)
+
+```
+
+
+```{r}
+
+pr <- nc_open("/home/patricia/data_download/CMIP6ng_download/cmip6-ng/pr/day/native/pr_day_CESM2_ssp585_r1i1p1f1_native.nc") #, lyrs = "pr_1")
+lon <- ncvar_get(pr, "lon")
+lat <- ncvar_get(pr, "lat")
+
+tmp.array <- ncvar_get(pr, "pr")
+dunits <- ncatt_get(pr, "pr", "units")
+tunits <- ncatt_get(pr, "time", "units")
+dunits
+tunits
+
+
+tmp.slice <- tmp.array[,,1]
+nc_close(pr)
+
+image(lon, lat, tmp.slice)
+
+
+```
+
+
+
+```{r}
+
+tas <- tmp.array[,,m]
+
+mapCDFpr <- function(loat, lon, tas)
+  
+{
+  
+  titletext <- "Precipitation"
+  
+  expand.grid(lon, lat) %>%
+    rename(lon = var1, lat = var2) %>%
+    
+    mutate(lon = ifelse(lon > 180, -(360-lon), lon),
+           
+           tas = as.vector(tas)) %>%
+    
+    ggplot() +
+    
+    geom_point(aes(x = lon, y = lat, color = tas),
+               size = 0.8) +
+    borders("world", colour = "black", fill = NA) +
+    
+    scale_color_viridis(na.value = "white", name = "Precipitation") + 
+    
+    theme(legend.direction ="vertical", legend.position = "right", legend.key.width = unit(0.4, "cm"),    legend.key.height = unit(2, "cm")) + 
+    
+    coord_quickmap() +
+    
+    ggtitle(titletext)
+  
+}
+
+
+mapCDFpr(lat, lon, tmp.slice)
+
+
+```
+
+
+
+
+
+```{r}
+
+# extraction of a specific grid point 
+lon <- 80
+lat <- 0
+pr_grid_point <- extract(pr, c(lon, lat))
+print(pr_grid_point)
+
+```
+
+
+
+
+```{r}
+
+
+specific_layer <- pr_grid_point[[1]]
+specific_layer
+
+
+```
+
+
+
+# Visualization
+
+
+```{r}
+
+
+
+# animation parameters
+ani_opts <- list(interval = 0.5, loop = TRUE)
+
+# animation
+levelplot(pr_grid_point, col.regions = rev(terrain.colors(255)),
+          colorkey = TRUE, at = seq(minValue(pr_grid_point), maxValue(pr_grid_point), length.out = 255),
+          par.settings = rasterTheme(region = rev(terrain.colors(255))),
+          main = "Precipitation on one Grid Point over Time",
+          xlab = "Longitude", ylab = "Latitude",
+          margin = FALSE,
+          scales = list(draw = FALSE),
+          between = list(x = 0.5, y = 0.5),
+          colorkey = list(space = "top"),
+          panel = function(...) {
+            panel.levelplot(...)
+            panel.text(x = -70, y = 40, labels = as.character(index(pr_grid_point)[.frame]),
+                       col = "white", cex = 1.5, font = 2)
+          },
+          duration = length(pr_grid_point),
+          ani.options = ani_opts)
+
+
+
+
+
+
+
+```
+
