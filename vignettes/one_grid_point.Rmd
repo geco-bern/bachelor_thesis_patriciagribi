@@ -1,13 +1,15 @@
 ---
-title: "One Grid Point"
+title: "One Gridpoint"
 author: "Patricia Gribi"
 date: "2024-03-19"
 output: html_document
 ---
 
 
-# Read Data
+9.10-10.40
+11.00-
 
+# Variables over Time for one Gridpoint
 
 
 ```{r}
@@ -26,53 +28,173 @@ library(ncdf4)
 library(chron)
 library(RColorBrewer)
 library(lattice)
+library(cwd)
 
 ```
 
 
+# Evapotranspiration
+
+## Variables
+
+
 ```{r}
 
-pr <- nc_open("/home/patricia/data_download/CMIP6ng_download/cmip6-ng/pr/day/native/pr_day_CESM2_ssp585_r1i1p1f1_native.nc") #, lyrs = "pr_1")
-lon <- ncvar_get(pr, "lon")
-lat <- ncvar_get(pr, "lat")
+# latent heat flux (W m-2)
+hfls_CMIP6ng_data <- nc_open("/home/patricia/data_download/CMIP6ng_download/cmip6-ng/hfls/mon/native/hfls_mon_CESM2_ssp585_r1i1p1f1_native.nc")
 
-tmp.array <- ncvar_get(pr, "pr")
-dunits <- ncatt_get(pr, "pr", "units")
-tunits <- ncatt_get(pr, "time", "units")
-dunits
-tunits
+# air temperature (°C)
+tas_CMIP6ng_data <- nc_open("/home/patricia/data_download/CMIP6ng_download/cmip6-ng/tas/day/native/tas_day_CESM2_ssp585_r1i1p1f1_native.nc") 
+
+# atmospheric pressure (Pa)
+
+patm <- 101320 # standard air pressure at sea level in Pa (1013.2 mb) (Air Pressure | National Oceanic and Atmospheric Administration, 2024)
+
+```
 
 
-tmp.slice <- tmp.array[,,1]
+## Extraction
+
+```{r}
+
+gridpoint_extraction <- function(data, variable) {
+  
+  # indices of the grid point 
+  start_lon <- 20  # longitude index
+  start_lat <- 30 # latitude index
+  
+  # get days
+  var_dates <- as.Date(data$dim$time$vals, origin = '1850-01-01')
+  
+  # get values at location lon lat
+  var_output <- ncvar_get(data, varid = variable,
+                    start= c(which.min(abs(data$dim$lon$vals - lon)), # look for closest long
+                             which.min(abs(data$dim$lat$vals - lat)),  # look for closest lat
+                             1),
+                    count = c(1,1,-1)) #count '-1' means 'all values along that dimension'that dimension'
+  
+  # create dataframe
+  var <- data.frame(dates= var_dates, variable = var_output)
+  
+  return(var)
+}
+
+
+tas <- gridpont_extraction(tas_CMIP6ng_data, "tas")
+
+
+
+```
+
+
+## Conversion into mass units
+
+```{r}
+
+et <- convert_et(hfls_CMIP6ng_data, tas_CMIP6ng_data, patm) # returns the water mass flux in mm d-1 (eqv. to kg m-2)
+
+
+```
+
+I have different variables in netcdf format
+i want to extract only the variables of the netcdf data, combine them to obtain just one variable (evapotranspiration) and then put it in the same netcdf-format (regarding longitude/latitude, extent...). How can I do this?
+
+
+Create a New NetCDF File: Create a new NetCDF file using the nc_create() function. Define the dimensions (longitude, latitude, time, etc.) and attributes based on the original NetCDF files.
+
+Write Combined Variable to the New NetCDF File: Write the combined variable (evapotranspiration) to the new NetCDF file using ncvar_put().
+
+
+```{r}
+
+# Create a new NetCDF file
+new_nc_file <- nc_create("combined_evapotranspiration.nc")
+
+# Define dimensions and attributes based on the original NetCDF files
+# (Add code to define dimensions and attributes)
+
+# Write evapotranspiration to the new NetCDF file
+ncvar_put(new_nc_file, "evapotranspiration", evapotranspiration)
+
+
+```
+
+
+
+
+
+## Gridpoint extraction
+
+```{r}
+
+# loading data
+pr_CMIP6ng_data <- nc_open("/home/patricia/data_download/CMIP6ng_download/cmip6-ng/pr/day/native/pr_day_CESM2_ssp585_r1i1p1f1_native.nc") 
+
+#print(pr_CMIP6ng_data) # dimension-check
+
+# indices of the grid point 
+start_lon <- 20  # longitude index
+start_lat <- 30 # latitude index
+
+# get days
+pr_dates <- as.Date(pr_CMIP6ng_data$dim$time$vals, origin = '1850-01-01')
+
+# get values at location lon lat
+pr_output <- ncvar_get(pr_CMIP6ng_data, varid = 'pr',
+                  start= c(which.min(abs(pr_CMIP6ng_data$dim$lon$vals - lon)), # look for closest long
+                           which.min(abs(pr_CMIP6ng_data$dim$lat$vals - lat)),  # look for closest lat
+                           1),
+                  count = c(1,1,-1)) #count '-1' means 'all values along that dimension'that dimension'
+
+# create dataframe
+pr <- data.frame(dates= pr_dates, precipitation = pr_output)
+
+
+```
+
+
+
+```{r}
+
+ggplot(data = pr, aes(x = dates, y = precipitation)) +
+  geom_line() +
+  labs(x = "Date", y = "Precipitation", title = "Precipitation over Time at Specific Grid Point") +
+  theme_minimal()
+
+```
+
+
+find out what gridpoint?
+wrong dates of data
+convert units of precipitation
+how to run the variables through the cwd algorithm in another repository
+
+
+```{r}
+
 nc_close(pr)
 
-image(lon, lat, tmp.slice)
 
+# plot
 
-```
+var <- tmp.array[,,1]
 
-
-
-```{r}
-
-tas <- tmp.array[,,m]
-
-mapCDFpr <- function(loat, lon, tas)
+mapCDFpr <- function(lat, lon, var)
   
 {
   
   titletext <- "Precipitation"
   
   expand.grid(lon, lat) %>%
-    rename(lon = var1, lat = var2) %>%
+    rename(longitude = lon, latitude = lat) %>%
     
     mutate(lon = ifelse(lon > 180, -(360-lon), lon),
            
-           tas = as.vector(tas)) %>%
+           var = as.vector(var)) %>%
     
     ggplot() +
     
-    geom_point(aes(x = lon, y = lat, color = tas),
+    geom_point(aes(x = lon, y = lat, color = var),
                size = 0.8) +
     borders("world", colour = "black", fill = NA) +
     
@@ -106,53 +228,12 @@ print(pr_grid_point)
 
 ```
 
+# Literature
 
-
-
-```{r}
-
-
-specific_layer <- pr_grid_point[[1]]
-specific_layer
-
-
-```
-
-
-
-# Visualization
-
-
-```{r}
-
-
-
-# animation parameters
-ani_opts <- list(interval = 0.5, loop = TRUE)
-
-# animation
-levelplot(pr_grid_point, col.regions = rev(terrain.colors(255)),
-          colorkey = TRUE, at = seq(minValue(pr_grid_point), maxValue(pr_grid_point), length.out = 255),
-          par.settings = rasterTheme(region = rev(terrain.colors(255))),
-          main = "Precipitation on one Grid Point over Time",
-          xlab = "Longitude", ylab = "Latitude",
-          margin = FALSE,
-          scales = list(draw = FALSE),
-          between = list(x = 0.5, y = 0.5),
-          colorkey = list(space = "top"),
-          panel = function(...) {
-            panel.levelplot(...)
-            panel.text(x = -70, y = 40, labels = as.character(index(pr_grid_point)[.frame]),
-                       col = "white", cex = 1.5, font = 2)
-          },
-          duration = length(pr_grid_point),
-          ani.options = ani_opts)
+Air Pressure | National Oceanic and Atmospheric Administration: https://www.noaa.gov/jetstream/atmosphere/air-pressure, last access: 23 March 2024.
 
 
 
 
 
-
-
-```
 
