@@ -3,7 +3,7 @@
 
 ## Summary
 
-This bachelor thesis aims to explore trends in seasonal water deficits using data from the Climate Model Intercomparison Project Phase 6 (CMIP6). The research will focus on deriving evapotranspiration, precipitation and potential evapotranspiration time series across the globe. With the CWD-algorithm implemented by the geco-group time series of the cumulative water deficit (CWD) will be calculated and their long-term trends investigated. The thesis seeks to contribute valuable insights into the understanding of drought impacts in a changing climate and address existing uncertainties in future drought projections.
+This bachelor thesis aims to explore trends in seasonal water deficits using data from the Climate Model Intercomparison Project Phase 6 (CMIP6). The data is derived from the CESM2 model and the selected simulation is the ssp585. This corresponds to the future scenarios SSP-RCP8.5 that assume the highest CO2 emissions and predict the strongest warming. The research will focus on deriving evapotranspiration, precipitation and potential evapotranspiration time series across the globe. With the CWD-algorithm implemented by the geco-group time series of the cumulative water deficit (CWD) will be calculated and their long-term trends investigated. The thesis seeks to contribute valuable insights into the understanding of drought impacts in a changing climate and address existing uncertainties in future drought projections.
 
 
 ## Background and Motivation
@@ -19,7 +19,7 @@ The objective of this thesis lies in targeting seasonal water deficits as an imp
 
 The aim especially will be to answer following question: 
 
-- What are the long-term trends in cumulative water deficits globally, and how do these trends correlate with the CMIP6-ng model outputs? Are there regions experiencing more pronounced or accelerated changes in water deficits?
+- What are the long-term trends in cumulative water deficits and potential cumulative water deficits globally? What is the difference between them? Are there regions experiencing more pronounced or accelerated changes in water deficits?
 
 
 ## Implementation
