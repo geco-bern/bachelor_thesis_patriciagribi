@@ -7,7 +7,9 @@ output: html_document
 
 
 9.10-10.40
-11.00-
+11.00-12.00
+
+27.03: 15.30-
 
 # Variables over Time for one Gridpoint
 
@@ -35,6 +37,7 @@ library(cwd)
 
 # Evapotranspiration
 
+
 ## Variables
 
 
@@ -43,11 +46,10 @@ library(cwd)
 # latent heat flux (W m-2)
 hfls_CMIP6ng_data <- nc_open("/home/patricia/data_download/CMIP6ng_download/cmip6-ng/hfls/mon/native/hfls_mon_CESM2_ssp585_r1i1p1f1_native.nc")
 
-# air temperature (°C)
+# air temperature (K)
 tas_CMIP6ng_data <- nc_open("/home/patricia/data_download/CMIP6ng_download/cmip6-ng/tas/day/native/tas_day_CESM2_ssp585_r1i1p1f1_native.nc") 
 
 # atmospheric pressure (Pa)
-
 patm <- 101320 # standard air pressure at sea level in Pa (1013.2 mb) (Air Pressure | National Oceanic and Atmospheric Administration, 2024)
 
 ```
@@ -68,10 +70,10 @@ gridpoint_extraction <- function(data, variable) {
   
   # get values at location lon lat
   var_output <- ncvar_get(data, varid = variable,
-                    start= c(which.min(abs(data$dim$lon$vals - lon)), # look for closest long
-                             which.min(abs(data$dim$lat$vals - lat)),  # look for closest lat
+                    start= c(which.min(abs(data$dim$lon$vals - start_lon)), # closest long taken
+                             which.min(abs(data$dim$lat$vals - start_lat)),  # closest lat taken
                              1),
-                    count = c(1,1,-1)) #count '-1' means 'all values along that dimension'that dimension'
+                    count = c(1,1,-1)) #count '-1' means 'all values along that dimension
   
   # create dataframe
   var <- data.frame(dates= var_dates, variable = var_output)
@@ -80,8 +82,34 @@ gridpoint_extraction <- function(data, variable) {
 }
 
 
-tas <- gridpont_extraction(tas_CMIP6ng_data, "tas")
 
+# temperature extraction
+tas <- gridpoint_extraction(tas_CMIP6ng_data, "tas")
+
+colnames(tas) <- c("date", "temperature") # column renaming
+
+tas$temperature <- tas$temperature - 273.15 # conversion to °C
+
+# latent heat flux extraction
+
+hfls <- gridpoint_extraction(hfls_CMIP6ng_data, "hfls")
+
+colnames(hfls) <- c("date", "latent_heat_flux") # column renaming
+
+
+# create new dataframe to calculate et
+select_tas <- select(tas, temperature)
+select_hfls <- select(hfls, latent_heat_flux)
+
+
+# Combining selected columns into a new data frame
+vars_et_df <- bind_cols(select_tas, select_hfls)
+
+
+
+# iterate through rows and calculate et
+
+vars_et_df$evapotranspiration <- apply(vars_et_df, 1, convert_et, patm=patm, return_df= TRUE)
 
 
 ```
@@ -91,7 +119,7 @@ tas <- gridpont_extraction(tas_CMIP6ng_data, "tas")
 
 ```{r}
 
-et <- convert_et(hfls_CMIP6ng_data, tas_CMIP6ng_data, patm) # returns the water mass flux in mm d-1 (eqv. to kg m-2)
+et <- convert_et(hfls_col, tas_col, patm, TRUE) # returns the water mass flux in mm d-1 (eqv. to kg m-2)
 
 
 ```
@@ -141,8 +169,8 @@ pr_dates <- as.Date(pr_CMIP6ng_data$dim$time$vals, origin = '1850-01-01')
 
 # get values at location lon lat
 pr_output <- ncvar_get(pr_CMIP6ng_data, varid = 'pr',
-                  start= c(which.min(abs(pr_CMIP6ng_data$dim$lon$vals - lon)), # look for closest long
-                           which.min(abs(pr_CMIP6ng_data$dim$lat$vals - lat)),  # look for closest lat
+                  start= c(which.min(abs(pr_CMIP6ng_data$dim$lon$vals - start_lon)), # look for closest long
+                           which.min(abs(pr_CMIP6ng_data$dim$lat$vals - start_lat)),  # look for closest lat
                            1),
                   count = c(1,1,-1)) #count '-1' means 'all values along that dimension'that dimension'
 
@@ -164,10 +192,8 @@ ggplot(data = pr, aes(x = dates, y = precipitation)) +
 ```
 
 
-find out what gridpoint?
 wrong dates of data
 convert units of precipitation
-how to run the variables through the cwd algorithm in another repository
 
 
 ```{r}
