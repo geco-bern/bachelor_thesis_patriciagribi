@@ -1,0 +1,251 @@
+---
+title: "One Gridpoint"
+author: "Patricia Gribi"
+date: "2024-03-19"
+output: html_document
+---
+
+
+# Variables over Time for one Gridpoint
+
+
+## Data and Library Loading
+
+
+```{r, echo=FALSE}
+
+# libraries
+
+library(terra)
+library(readr)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(viridis)
+library(viridisLite)
+library(weathermetrics)
+library(ncdf4)
+library(chron)
+library(RColorBrewer)
+library(lattice)
+library(cwd)
+library(lubridate)
+
+```
+
+
+
+```{r}
+
+# latent heat flux (W m-2)
+hfls_CMIP6ng_data <- nc_open("/home/patricia/data_download/CMIP6ng_download/cmip6-ng/hfls/mon/native/hfls_mon_CESM2_ssp585_r1i1p1f1_native.nc")
+
+# air temperature (K)
+tas_CMIP6ng_data <- nc_open("/home/patricia/data_download/CMIP6ng_download/cmip6-ng/tas/day/native/tas_day_CESM2_ssp585_r1i1p1f1_native.nc") 
+
+# precipitation (kg m-2 s-1)
+pr_CMIP6ng_data <- nc_open("/home/patricia/data_download/CMIP6ng_download/cmip6-ng/pr/day/native/pr_day_CESM2_ssp585_r1i1p1f1_native.nc") 
+
+# atmospheric pressure (Pa)
+patm <- 101320 # standard air pressure at sea level in Pa (1013.2 mb) (Air Pressure | National Oceanic and Atmospheric Administration, 2024)
+
+# surface upwelling longwave radiation (W m-2)
+rlus_CMIP6ng_data <- nc_open("/home/patricia/data_download/CMIP6ng_download/cmip6-ng/rlus/mon/native/rlus_mon_CESM2_ssp585_r1i1p1f1_native.nc")
+
+# surface downwelling longwave radiation (W m-2)
+rlds_CMIP6ng_data <- nc_open("/home/patricia/data_download/CMIP6ng_download/cmip6-ng/rlds/mon/native/rlds_mon_CESM2_ssp585_r1i1p1f1_native.nc")
+
+# surface downwelling shortwave radiation (W m-2)
+rsds_CMIP6ng_data <- nc_open("/home/patricia/data_download/CMIP6ng_download/cmip6-ng/rsds/mon/native/rsds_mon_CESM2_ssp585_r1i1p1f1_native.nc")
+
+```
+
+
+## Gridpoint Extraction
+
+```{r}
+
+source("../R/gridpoint_extraction.R")
+
+
+# temperature extraction
+tas <- gridpoint_extraction(tas_CMIP6ng_data, "tas")
+
+colnames(tas) <- c("date", "temperature") # column renaming
+
+tas$temperature <- tas$temperature - 273.15 # conversion to °C
+
+
+# latent heat flux extraction
+
+hfls <- gridpoint_extraction(hfls_CMIP6ng_data, "hfls")
+
+colnames(hfls) <- c("date", "latent_heat_flux") # column renaming
+
+
+# precipitation extraction
+
+pr <- gridpoint_extraction(pr_CMIP6ng_data, "pr")
+
+colnames(pr) <- c("date", "precipitation") # column renaming
+
+```
+
+
+## Time-Range and Resolution Adjustments
+
+```{r}
+
+# creation of new dataframe to calculate et
+
+# temperature subset selection to match latent_heat_flux records
+source("../R/exclude_time_range.R")
+
+adj_tas <- exclude_time_range(tas, as.Date("2014-11-22"), as.Date("2014-12-07") )
+adj_tas <- exclude_time_range(adj_tas,as.Date("2100-10-17"), as.Date("2100-11-01") )
+
+# precipitation subset selection to match the other dataframes
+
+adj_pr <- exclude_time_range(pr, as.Date("2014-11-22"), as.Date("2014-12-07") )
+adj_pr <- exclude_time_range(adj_pr,as.Date("2100-10-17"), as.Date("2100-11-01") )
+
+
+# creation of the date sequence
+date_sequence <- seq(as.Date("2014-12-07"), as.Date("2100-10-16"), by = "day")
+
+# creation of dataframe with the dates of the previous sequence
+vars_df <- data.frame(date = date_sequence)
+
+vars_df$temperature <- adj_tas$temperature
+vars_df$precipitation <- adj_pr$precipitation
+
+# addition of latent heat flux with linear interpolation to obtain daily resolution
+vars_df$latent_heat_flux <- approx(x= hfls$date, y = hfls$latent_heat_flux, xout = vars_df$date)$y
+
+```
+
+
+## Conversion of ET into mass units
+
+```{r}
+
+# calculate evapotranspiration
+vars_df$evapotranspiration <- apply(vars_df[, c("temperature", "latent_heat_flux")], 1, function(x) convert_et(x[1], x[2], patm)) # returns the water mass flux in mm d-1 (eqv. to kg m-2)
+
+```
+
+
+### Annual totals
+
+```{r}
+
+ann_et_pr <- vars_df |>
+  mutate(year = year(date)) |>
+  group_by(year) |>
+  summarise(et = sum(evapotranspiration), prec = sum(precipitation))
+
+# remove year 2014 because data not available for whole year
+ann_et_pr <- ann_et_pr[-1, ]
+
+ann_et_pr |>
+  pivot_longer(cols = c(et, prec), names_to = "Flux") |> 
+  ggplot(aes(x = year, y = value, color = Flux)) +
+  geom_line() +
+  labs(y = "Flux (mm/yr)")
+
+```
+
+
+## Snow Simulation
+
+```{r}
+
+vars_df <- vars_df |>
+  mutate(precipitation = ifelse(temperature < 0, 0, precipitation),
+         snow = ifelse(temperature < 0, precipitation, 0)) |>
+  simulate_snow(varnam_prec = "precipitation", varnam_snow = "snow", varnam_temp = "temperature")
+
+
+vars_df <- vars_df |>
+  mutate(wbal = liquid_to_soil - evapotranspiration)
+
+```
+
+
+## Cumulative Deficit Algorithm
+
+```{r}
+
+out_cwd <- cwd(vars_df,
+               varname_wbal = "wbal",
+               varname_date = "date",
+               thresh_terminate = 0.0,
+               thresh_drop = 0.0)
+
+
+```
+
+Retain only events of a minimum length of 20 days.
+
+```{r}
+
+out_cwd$inst <- out_cwd$inst |>
+  filter(len >= 20)
+
+```
+
+
+
+```{r}
+
+ggplot() +
+  geom_rect(
+    data = out_cwd$inst,
+    aes(xmin = date_start, xmax = date_end, ymin = -99, ymax = 99999),
+    fill = rgb(0,0,0,0.3),
+    color = NA) +
+  geom_line(data  =  out_cwd$df, aes(date, precipitation), size  =  0.3, color = "royalblue") +
+  geom_line(data  =  out_cwd$df, aes(date, deficit), color = "tomato") +
+  coord_cartesian(ylim = c(0, 200)) +
+  theme_classic() +
+  labs(x = "Date", y = "Cumulative water deficit (mm)")
+
+
+```
+
+
+
+
+
+
+
+```{r}
+
+ggplot(data = pr, aes(x = dates, y = precipitation)) +
+  geom_line() +
+  labs(x = "Date", y = "Precipitation", title = "Precipitation over Time at Specific Grid Point") +
+  theme_minimal()
+
+```
+
+
+
+## Daily Surface Net Radiation
+
+
+ surface down- and upwelling long- and shortwave radiation, as well as temperature.
+
+
+
+
+
+
+# Literature
+
+Air Pressure | National Oceanic and Atmospheric Administration: https://www.noaa.gov/jetstream/atmosphere/air-pressure, last access: 23 March 2024.
+
+
+
+
+
+

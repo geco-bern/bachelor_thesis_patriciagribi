@@ -1,0 +1,67 @@
+---
+title: "Ideas"
+author: "Patricia Gribi"
+date: "2024-03-29"
+output: html_document
+---
+
+
+# Plot
+
+
+```{r}
+
+
+# plot
+
+var <- tmp.array[,,1]
+
+mapCDFpr <- function(lat, lon, var)
+  
+{
+  
+  titletext <- "Precipitation"
+  
+  expand.grid(lon, lat) %>%
+    rename(longitude = lon, latitude = lat) %>%
+    
+    mutate(lon = ifelse(lon > 180, -(360-lon), lon),
+           
+           var = as.vector(var)) %>%
+    
+    ggplot() +
+    
+    geom_point(aes(x = lon, y = lat, color = var),
+               size = 0.8) +
+    borders("world", colour = "black", fill = NA) +
+    
+    scale_color_viridis(na.value = "white", name = "Precipitation") + 
+    
+    theme(legend.direction ="vertical", legend.position = "right", legend.key.width = unit(0.4, "cm"),    legend.key.height = unit(2, "cm")) + 
+    
+    coord_quickmap() +
+    
+    ggtitle(titletext)
+  
+}
+
+
+mapCDFpr(lat, lon, tmp.slice)
+
+
+```
+
+
+
+
+# Gripoint extraction
+
+```{r}
+
+# extraction of a specific grid point 
+lon <- 80
+lat <- 0
+pr_grid_point <- extract(pr, c(lon, lat))
+print(pr_grid_point)
+
+```
