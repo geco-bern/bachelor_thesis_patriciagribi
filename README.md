@@ -10,8 +10,7 @@ This bachelor thesis aims to explore trends in seasonal water deficits using dat
 
 With further climate change droughts are projected to become more frequent and more intense in many regions of our planet (Calvin et al., 2023). Droughts impose major impacts on fluxes between land and the atmosphere, agricultural production, and the carbon cycle. For example they show a decrease in photosynthesis and tree mortaility (Doughty et al., 2015). Droughts are prolonged dry periods in the natural climate cycle (Drought, 2024) and they occur with the absence of water (Definition of Drought | Did You Know? | National Centers for Environmental Information (NCEI), 2024). 
 
-Relevant variables for defining and measuring droughts are precipitation, soil moisture, evapotranspiration and runoff. Therefore examine trends in those is relevant for different aspects concerning the detection and understanding of droughts. 
-
+The quantification of water storage capacity in the root zone of plants is of central importance for an effective assessment of hydrological and ecological forecasts, especially with regard to drought periods. Ecosystems are able to store water in their root zones, which is mainly influenced by the interaction of atmospheric moisture supply and the water demand of the tree canopy. (Gao et al., 2014) The cumulative water deficit (CWD) during dry intervals, using a mass balance approach, serves as a proxy for describing the effective water storage capacity within the root zone (Stocker et al., 2023).
 
 ## Objective
 
@@ -94,6 +93,7 @@ This research project aims to contribute to our understanding of trends in cumul
 - Definition of Drought | Did You Know? | National Centers for Environmental Information (NCEI): https://www.ncei.noaa.gov/access/monitoring/dyk/drought-definition, last access: 14 March 2024.
 - Doughty, C. E., Metcalfe, D. B., Girardin, C. a. J., Amézquita, F. F., Cabrera, D. G., Huasco, W. H., Silva-Espejo, J. E., Araujo-Murakami, A., da Costa, M. C., Rocha, W., Feldpausch, T. R., Mendoza, A. L. M., da Costa, A. C. L., Meir, P., Phillips, O. L., and Malhi, Y.: Drought impact on forest carbon dynamics and fluxes in Amazonia, Nature, 519, 78–82, https://doi.org/10.1038/nature14213, 2015.
 - Drought: https://www.who.int/health-topics/drought, last access: 14 March 2024.
+- Gao, H., Hrachowitz, M., Schymanski, S. J., Fenicia, F., Sriwongsitanon, N., and Savenije, H. H. G.: Climate controls how ecosystems size the root zone storage capacity at catchment scale, Geophysical Research Letters, 41, 7916–7923, https://doi.org/10.1002/2014GL061668, 2014.
 - Stocker, B.: cwd v1.0: R package for cumulative water deficit calculation, , https://doi.org/10.5281/zenodo.5359053, 2021.
 - Stocker, B. D., Tumber-Dávila, S. J., Konings, A. G., Anderson, M. C., Hain, C., and Jackson, R. B.: Global patterns of water storage in the rooting zones of vegetation, Nat. Geosci., 16, 250–256, https://doi.org/10.1038/s41561-023-01125-2, 2023.
 
