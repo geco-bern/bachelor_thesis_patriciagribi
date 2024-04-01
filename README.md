@@ -41,19 +41,21 @@ Variables needed:
 
 Following variables have been downloaded:
 
+- **evspsbl**: **Evapotranspiration**, monthly available, on the native grid, with units kg m-2 s-1
 - **hfls**: **Surface Upward Latent Heat Flux**, available monthly, on the native grid, units W m-2
 - **rlds**: **Surface Downwelling Longwave Radiation**, monthly available, on the native grid with units W m-2
 - **rlus**: **Surface Upwelling Longwave Radiation**, monthly available, on the native grid with units W m-2
 - **rsds**: **Surface Downwelling Shortwave Radiation**, available per month, on the native grid with units W m-2
 - **rsus**: **Surface Upwelling Shortwave Radiation**, monthly available, on the native grid with units W m-2
 - **tas**: **Near-Surface Air Temperature**, daily available, as well on the native grid, in K
-- **tran**: **Transpiration**, is available per month, on the native grid with units kg m-2 s-1
 - **pr**: **Precipitation**, is available per day, on the native grid with units kg m-2 s-1
+
 
 *Native grid: according to CMIP6-ng data set (Brunner et al., 2020) the native grid corresponds to either data reported on a model's native grid, regridded data reported on the data provider's preferred target grid, regridded data reported on a grid other than the native grid and other than the preferred target grid or global mean data. The priorities follow a descending order.*
 
 As evapotranspiration the surface upward latent heat flux variable will be utilised. The units will be converted to mass units with the provided function in the CWD-algorithm. For the conversion, atmospheric pressure (Pa) is a necessary parameter. To be able to perform the calculations, a default value for atmospheric pressure will be assumed.
 
+**explanation of how potential ET is calculated from net radiation (and temperature)**
 Regarding the variables, there is no potential evapotranspiration available. To obtain it, instead daily surface net radiation will be used. This is comprised of the variables surface down- and upwelling long- and shortwave radiation, as well as temperature.
 
 Moreover, there is only precipitation contained as a variable with no distinction of snow. Consequently the snow will be modeled, again with a provided function by the CWD-algorithm. The reason for the distinction between snow and precipitation is due to the effect of snowpack as a temporary water storage that supplies the infiltration to the soil during spring and early summer (Stocker et al., 2023).
