@@ -14,7 +14,7 @@ The quantification of water storage capacity in the root zone of plants is of ce
 
 ## Objective
 
-The objective of this thesis lies in targeting seasonal water deficits as an impact-relevant quantity measuring the severity of droughts. Using outputs from the Climate Model Intercomparison Project Phase 6 (CMIP6), simulated cumulative water deficit (CWD) time series across the globe for first one, then multiple models, will be derived and their long-term trends investigated.
+The objective of this thesis lies in targeting seasonal water deficits as an impact-relevant quantity measuring the severity of droughts. Using outputs from the Climate Model Intercomparison Project Phase 6 (CMIP6), simulated cumulative water deficit (CWD) time series across the globe for the CESM2 model will be derived and their long-term trends investigated.
 
 The aim especially will be to answer following question: 
 
