@@ -55,8 +55,8 @@ Following variables have been downloaded:
 
 As evapotranspiration the surface upward latent heat flux variable will be utilised. The units will be converted to mass units with the provided function in the CWD-algorithm. For the conversion, atmospheric pressure (Pa) is a necessary parameter. To be able to perform the calculations, a default value for atmospheric pressure will be assumed.
 
-**explanation of how potential ET is calculated from net radiation (and temperature)**
-Regarding the variables, there is no potential evapotranspiration available. To obtain it, instead daily surface net radiation will be used. This is comprised of the variables surface down- and upwelling long- and shortwave radiation, as well as temperature.
+Regarding the variables, there is no potential evapotranspiration available. To obtain it, instead daily surface net radiation and temperature will be used. Oudin et al. showed that very simple models relying only on extraterrestrial radiation and mean daily temperature are as efficient as more complex models such as the Penman model and its variants. (Oudin et al., 2005) The potential ET in this work will be calculated as following: 
+This is comprised of the variables surface down- and upwelling long- and shortwave radiation, as well as temperature.
 
 Moreover, there is only precipitation contained as a variable with no distinction of snow. Consequently the snow will be modeled, again with a provided function by the CWD-algorithm. The reason for the distinction between snow and precipitation is due to the effect of snowpack as a temporary water storage that supplies the infiltration to the soil during spring and early summer (Stocker et al., 2023).
 
@@ -96,6 +96,7 @@ This research project aims to contribute to our understanding of trends in cumul
 - Doughty, C. E., Metcalfe, D. B., Girardin, C. a. J., Amézquita, F. F., Cabrera, D. G., Huasco, W. H., Silva-Espejo, J. E., Araujo-Murakami, A., da Costa, M. C., Rocha, W., Feldpausch, T. R., Mendoza, A. L. M., da Costa, A. C. L., Meir, P., Phillips, O. L., and Malhi, Y.: Drought impact on forest carbon dynamics and fluxes in Amazonia, Nature, 519, 78–82, https://doi.org/10.1038/nature14213, 2015.
 - Drought: https://www.who.int/health-topics/drought, last access: 14 March 2024.
 - Gao, H., Hrachowitz, M., Schymanski, S. J., Fenicia, F., Sriwongsitanon, N., and Savenije, H. H. G.: Climate controls how ecosystems size the root zone storage capacity at catchment scale, Geophysical Research Letters, 41, 7916–7923, https://doi.org/10.1002/2014GL061668, 2014.
+- Oudin, L., Hervieu, F., Michel, C., Perrin, C., Andréassian, V., Anctil, F., and Loumagne, C.: Which potential evapotranspiration input for a lumped rainfall–runoff model?: Part 2—Towards a simple and efficient potential evapotranspiration model for rainfall–runoff modelling, Journal of Hydrology, 303, 290–306, https://doi.org/10.1016/j.jhydrol.2004.08.026, 2005.
 - Stocker, B.: cwd v1.0: R package for cumulative water deficit calculation, , https://doi.org/10.5281/zenodo.5359053, 2021.
 - Stocker, B. D., Tumber-Dávila, S. J., Konings, A. G., Anderson, M. C., Hain, C., and Jackson, R. B.: Global patterns of water storage in the rooting zones of vegetation, Nat. Geosci., 16, 250–256, https://doi.org/10.1038/s41561-023-01125-2, 2023.
 
