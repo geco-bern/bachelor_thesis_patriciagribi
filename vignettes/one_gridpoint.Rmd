@@ -6,10 +6,22 @@ output: html_document
 ---
 
 
-# Variables over Time for one Gridpoint
+# Cumulative Water Deficit for one Gridpoint
 
 
-## Data and Library Loading
+## Data Wrangling
+
+**Overview**
+
+The data wrangling started with reading the data and loading the required 
+libraries.
+
+- data format is netcdf,
+- each variable needed is in a separate file and had therefore to be loaded separately
+- grid is of global extent in climate format where there are just
+positive values, (conversion conducted)
+- resolution either daily or monthly in cases with monthly resolution a linear interpolation was conducted to obtain daily resolution
+
 
 
 ```{r, echo=FALSE}
@@ -35,7 +47,10 @@ library(lubridate)
 
 
 
-```{r}
+```{r, echo=FALSE}
+
+# evapotranspiration (kg m-2 s-1)
+evspsbl_CMIP6ng_data <- nc_open("/home/patricia/data_download/CMIP6ng_download/cmip6-ng/evspsbl/mon/native/evspsbl_mon_CESM2_ssp585_r1i1p1f1_native.nc")
 
 # latent heat flux (W m-2)
 hfls_CMIP6ng_data <- nc_open("/home/patricia/data_download/CMIP6ng_download/cmip6-ng/hfls/mon/native/hfls_mon_CESM2_ssp585_r1i1p1f1_native.nc")
@@ -58,45 +73,91 @@ rlds_CMIP6ng_data <- nc_open("/home/patricia/data_download/CMIP6ng_download/cmip
 # surface downwelling shortwave radiation (W m-2)
 rsds_CMIP6ng_data <- nc_open("/home/patricia/data_download/CMIP6ng_download/cmip6-ng/rsds/mon/native/rsds_mon_CESM2_ssp585_r1i1p1f1_native.nc")
 
+# surface upwelling shortwave radiation (W m-2)
+rsus_CMIP6ng_data <- nc_open("/home/patricia/data_download/CMIP6ng_download/cmip6-ng/rsus/mon/native/rsus_mon_CESM2_ssp585_r1i1p1f1_native.nc")
+
 ```
 
+### Grid Conversion
 
-## Gridpoint Extraction
+
+
+
+### Gridpoint Extraction 
 
 ```{r}
 
 source("../R/gridpoint_extraction.R")
 
+# evapotranspiration extraction
+evspsbl <- gridpoint_extraction(evspsbl_CMIP6ng_data, "evspsbl")
 
 # temperature extraction
 tas <- gridpoint_extraction(tas_CMIP6ng_data, "tas")
 
-colnames(tas) <- c("date", "temperature") # column renaming
-
-tas$temperature <- tas$temperature - 273.15 # conversion to °C
-
-
 # latent heat flux extraction
-
 hfls <- gridpoint_extraction(hfls_CMIP6ng_data, "hfls")
 
-colnames(hfls) <- c("date", "latent_heat_flux") # column renaming
-
-
 # precipitation extraction
-
 pr <- gridpoint_extraction(pr_CMIP6ng_data, "pr")
 
-colnames(pr) <- c("date", "precipitation") # column renaming
+# radiation gridpoint extraction
+rlus <- gridpoint_extraction(rlus_CMIP6ng_data, "rlus")
+rlds <- gridpoint_extraction(rlds_CMIP6ng_data, "rlds")
+rsds <- gridpoint_extraction(rsds_CMIP6ng_data, "rsds")
+rsus <- gridpoint_extraction(rsus_CMIP6ng_data, "rsus")
 
 ```
 
 
-## Time-Range and Resolution Adjustments
+### Column Renaming and Unit Conversions
 
 ```{r}
 
-# creation of new dataframe to calculate et
+# evapotranspiration
+colnames(evspsbl) <- c("date", "evapotranspiration") # column renaming
+evspsbl$evapotranspiration <- evspsbl$evapotranspiration * 86400 # conversion to mm day-1
+
+# temperature
+colnames(tas) <- c("date", "temperature") # column renaming
+tas$temperature <- tas$temperature - 273.15 # conversion to °C
+
+# latent heat flux
+colnames(hfls) <- c("date", "latent_heat_flux") # column renaming
+
+# precipitation
+colnames(pr) <- c("date", "precipitation") # column renaming
+pr$precipitation <- pr$precipitation * 86400 # conversion to mm day-1
+
+# radiation
+colnames(rlus) <- c("date", "up_longwave_radiation") # column renaming
+colnames(rlds) <- c("date", "down_longwave_radiation") # column renaming
+colnames(rsds) <- c("date", "down_shortwave_radiation") # column renaming
+colnames(rsus) <- c("date", "up_shortwave_radiation") # column renaming
+
+# merge radiation variables into one dataframe
+radiation_df <- merge(merge(merge(rlus, rlds, by = "date"), rsds, by = "date"), rsus, by = "date")
+
+# calculate net radiation and add to dataframe
+radiation_df$net_radiation <- (radiation_df$down_shortwave_radiation - radiation_df$up_shortwave_radiation) + (radiation_df$down_longwave_radiation - radiation_df$up_longwave_radiation)
+
+# calculate factor 1.26 * net radiation
+radiation_df$pet <- radiation_df$net_radiation * 1.26
+
+```
+
+
+Rnet : SWnet + LWnet 
+
+et_e = pet = 1.26 * Rnet
+
+
+
+### Time-Range and Resolution Adjustments
+
+```{r}
+
+# creation of new dataframe to calculate et and pet
 
 # temperature subset selection to match latent_heat_flux records
 source("../R/exclude_time_range.R")
@@ -104,11 +165,9 @@ source("../R/exclude_time_range.R")
 adj_tas <- exclude_time_range(tas, as.Date("2014-11-22"), as.Date("2014-12-07") )
 adj_tas <- exclude_time_range(adj_tas,as.Date("2100-10-17"), as.Date("2100-11-01") )
 
-# precipitation subset selection to match the other dataframes
-
+# precipitation same subset selection
 adj_pr <- exclude_time_range(pr, as.Date("2014-11-22"), as.Date("2014-12-07") )
 adj_pr <- exclude_time_range(adj_pr,as.Date("2100-10-17"), as.Date("2100-11-01") )
-
 
 # creation of the date sequence
 date_sequence <- seq(as.Date("2014-12-07"), as.Date("2100-10-16"), by = "day")
@@ -122,17 +181,57 @@ vars_df$precipitation <- adj_pr$precipitation
 # addition of latent heat flux with linear interpolation to obtain daily resolution
 vars_df$latent_heat_flux <- approx(x= hfls$date, y = hfls$latent_heat_flux, xout = vars_df$date)$y
 
+# addition of evapotranspiration with linear interpolation to obtain daily resolution
+vars_df$evspsbl <- approx(x= evspsbl$date, y = evspsbl$evapotranspiration, xout = vars_df$date)$y
+
+# addition of net radiation with linear interpolation to obtain daily resolution
+vars_df$potential_evapotranspiration <- approx(x= radiation_df$date, y = radiation_df$pet, xout = vars_df$date)$y
+
 ```
 
 
-## Conversion of ET into mass units
+## Conversion of ET and PET into mass units
 
 ```{r}
 
-# calculate evapotranspiration
+# calculate evapotranspiration (et)
 vars_df$evapotranspiration <- apply(vars_df[, c("temperature", "latent_heat_flux")], 1, function(x) convert_et(x[1], x[2], patm)) # returns the water mass flux in mm d-1 (eqv. to kg m-2)
 
+# calculate potential evapotranspiration (pet)
+vars_df$evapotranspiration <- apply(vars_df[, c("temperature", "potential_evapotranspiration")], 1, function(x) convert_et(x[1], x[2], patm)) # returns the potential water mass flux in mm d-1 (eqv. to kg m-2)
+
 ```
+
+
+## Comparison CMIP6 evspsbl and calculated et
+
+```{r}
+
+ann_evspsbl_et <- vars_df |>
+  mutate(year = year(date)) |>
+  group_by(year) |>
+  summarise(et = sum(evapotranspiration), evspsbl = sum(evspsbl))
+
+ann_evspsbl_et |>
+  pivot_longer(cols = c(et, evspsbl), names_to = "Flux") |> 
+  ggplot(aes(x = year, y = value, color = Flux)) +
+  geom_line() +
+  labs(y = "Flux (mm/yr)")
+
+```
+make t-test to see if they are statistically different
+
+```{r}
+
+t_test_result <- t.test(vars_df$evapotranspiration, vars_df$evspsbl)
+
+print(t_test_result)
+
+```
+
+The null-hypothesis states in this
+case, that the two data-sets have no significant difference. p value very small
+rejection region. null-hypothesis rejected, there is a significant difference.
 
 
 ### Annual totals
@@ -142,7 +241,7 @@ vars_df$evapotranspiration <- apply(vars_df[, c("temperature", "latent_heat_flux
 ann_et_pr <- vars_df |>
   mutate(year = year(date)) |>
   group_by(year) |>
-  summarise(et = sum(evapotranspiration), prec = sum(precipitation))
+  summarise(et = sum(evspsbl), prec = sum(precipitation))
 
 # remove year 2014 because data not available for whole year
 ann_et_pr <- ann_et_pr[-1, ]
@@ -167,7 +266,7 @@ vars_df <- vars_df |>
 
 
 vars_df <- vars_df |>
-  mutate(wbal = liquid_to_soil - evapotranspiration)
+  mutate(wbal = liquid_to_soil - evspsbl)
 
 ```
 
@@ -212,32 +311,6 @@ ggplot() +
 
 
 ```
-
-
-
-
-
-
-
-```{r}
-
-ggplot(data = pr, aes(x = dates, y = precipitation)) +
-  geom_line() +
-  labs(x = "Date", y = "Precipitation", title = "Precipitation over Time at Specific Grid Point") +
-  theme_minimal()
-
-```
-
-
-
-## Daily Surface Net Radiation
-
-
- surface down- and upwelling long- and shortwave radiation, as well as temperature.
-
-
-
-
 
 
 # Literature
