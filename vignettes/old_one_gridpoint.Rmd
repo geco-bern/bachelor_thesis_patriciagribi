@@ -1,7 +1,7 @@
 ---
-title: "One Gridpoint"
+title: "old_one_gridpoint"
 author: "Patricia Gribi"
-date: "2024-03-19"
+date: "2024-04-09"
 output: html_document
 ---
 
@@ -48,11 +48,14 @@ library(lubridate)
 # evapotranspiration (kg m-2 s-1)
 evspsbl_CMIP6ng_data <- nc_open("/home/patricia/data_download/CMIP6ng_download/cmip6-ng/evspsbl/mon/native/evspsbl_mon_CESM2_ssp585_r1i1p1f1_native.nc")
 
-# precipitation (kg m-2 s-1)
-pr_CMIP6ng_data <- nc_open("/home/patricia/data_download/CMIP6ng_download/cmip6-ng/pr/day/native/pr_day_CESM2_ssp585_r1i1p1f1_native.nc") 
+# latent heat flux (W m-2)
+hfls_CMIP6ng_data <- nc_open("/home/patricia/data_download/CMIP6ng_download/cmip6-ng/hfls/mon/native/hfls_mon_CESM2_ssp585_r1i1p1f1_native.nc")
 
 # air temperature (K)
-tas_CMIP6ng_data <- nc_open("/home/patricia/data_download/CMIP6ng_download/cmip6-ng/tas/day/native/tas_day_CESM2_ssp585_r1i1p1f1_native.nc")
+tas_CMIP6ng_data <- nc_open("/home/patricia/data_download/CMIP6ng_download/cmip6-ng/tas/day/native/tas_day_CESM2_ssp585_r1i1p1f1_native.nc") 
+
+# precipitation (kg m-2 s-1)
+pr_CMIP6ng_data <- nc_open("/home/patricia/data_download/CMIP6ng_download/cmip6-ng/pr/day/native/pr_day_CESM2_ssp585_r1i1p1f1_native.nc") 
 
 # atmospheric pressure (Pa)
 patm <- 101320 # standard air pressure at sea level in Pa (1013.2 mb) (Air Pressure | National Oceanic and Atmospheric Administration, 2024)
@@ -72,22 +75,12 @@ rsus_CMIP6ng_data <- nc_open("/home/patricia/data_download/CMIP6ng_download/cmip
 ```
 
 
-### Grid Information
-
-To gain insights into the grid structure delineated in the CMIP6 data, an examination was conducted on the netCDF file with the precipitation variable as a representative case. By printing the dataset useful information was obtained. Within the dimensions section, it became clear that the latitude is represented as double, measured in degrees north, spanning from -90 to 90. Correspondingly, the longitude is also expressed as double, denominated in degrees east, ranging from 0 to 360. The longitudinal values are aligned along the x-axis, while the latitudinal values are aligned along the y-axis. Consequently, in coordinate notation (x, y), the longitude assumes the primary position, followed by the latitude.
-
-
-```{r}
-
-# get information about the grid
-print(pr_CMIP6ng_data)
-
-```
+### Grid Conversion
 
 
 ### Gridpoint Extraction 
 
-The gridpoint_extraction function was implemented to retrieve a specific grid point from the supplied dataset. Consequently, it facilitates the expression of the variable at a designated spatial location across time. The functionality of this function encompasses the provision of longitude and latitude as parameters. When these parameters are not provided to the function, default values are employed. In this function, the default parameter corresponds to the coordinates of the GIUB, specifically 46.95286466584806 latitude and 7.4351598698922405 longitude.
+The function gridpoint_extraction extracts a gridpoint from the data provided. In this case for each variable the same gridpoint was extracted.
 
 ```{r, echo=FALSE}
 
@@ -96,11 +89,14 @@ source("../R/gridpoint_extraction.R")
 # evapotranspiration extraction
 evspsbl <- gridpoint_extraction(evspsbl_CMIP6ng_data, "evspsbl")
 
-# precipitation extraction
-pr <- gridpoint_extraction(pr_CMIP6ng_data, "pr")
-
 # temperature extraction
 tas <- gridpoint_extraction(tas_CMIP6ng_data, "tas")
+
+# latent heat flux extraction
+hfls <- gridpoint_extraction(hfls_CMIP6ng_data, "hfls")
+
+# precipitation extraction
+pr <- gridpoint_extraction(pr_CMIP6ng_data, "pr")
 
 # radiation gridpoint extraction
 rlus <- gridpoint_extraction(rlus_CMIP6ng_data, "rlus")
@@ -111,35 +107,16 @@ rsus <- gridpoint_extraction(rsus_CMIP6ng_data, "rsus")
 ```
 
 
-### Grid Conversion
-
-This function serves the purpose of determining the position of a point within the standardized grid. Its utility extends to the conversion of longitude values exceeding 180 degrees into their corresponding negative equivalents.
-
-```{r}
-
-# Function to convert longitudes from 0-360 range to -180-180 range
-convert_longitude <- function(lon) {
-  lon <- lon - 360 * (lon > 180)
-  return(lon)
-}
-
-# Default value of gridpoint_extraction function:
-lon <- 340
-converted_lon <- convert_longitude(lon)
-print(converted_lon)
-
-```
-
 ### Column Renaming and Unit Conversions
 
 This research project aims to consistently represent the variables
 across all data sets with the following units:
 
 - **Date**: year-month-day (xxxx-xx-xx)
-- **Precipitation** and **(potential) Evapotranspiration**: in mm day-1 (equivalent to kg m-2)
 - **Temperature (tas)**: in degree Celsius (°C)
 - **Atmospheric Pressure**: in Pascal (Pa)
-- **Radiation**: in W m-2
+- **Precipitation** and **(potential) Evapotranspiration**: in mm day-1 (equivalent to kg m-2)
+- **Latent Heat Flux** and **Radiation**: in W m-2
 
 Therefore some unit conversions had to be conducted.
 
@@ -149,13 +126,16 @@ Therefore some unit conversions had to be conducted.
 colnames(evspsbl) <- c("date", "evapotranspiration") # column renaming
 evspsbl$evapotranspiration <- evspsbl$evapotranspiration * 86400 # conversion to mm day-1
 
-# precipitation
-colnames(pr) <- c("date", "precipitation") # column renaming
-pr$precipitation <- pr$precipitation * 86400 # conversion to mm day-1
-
 # temperature
 colnames(tas) <- c("date", "temperature") # column renaming
 tas$temperature <- tas$temperature - 273.15 # conversion to °C
+
+# latent heat flux
+colnames(hfls) <- c("date", "latent_heat_flux") # column renaming
+
+# precipitation
+colnames(pr) <- c("date", "precipitation") # column renaming
+pr$precipitation <- pr$precipitation * 86400 # conversion to mm day-1
 
 # radiation
 colnames(rlus) <- c("date", "up_longwave_radiation") # column renaming
@@ -183,17 +163,17 @@ To obtain a daily resolution for all variables, linear interpolation was applied
 
 ```{r}
 
-# creation of new dataframe to calculate pet
+# creation of new dataframe to calculate et and pet
 
+# temperature subset selection to match latent_heat_flux records
 source("../R/exclude_time_range.R")
 
-# precipitation subset selection
-adj_pr <- exclude_time_range(pr, as.Date("2014-11-22"), as.Date("2014-12-07") )
-adj_pr <- exclude_time_range(adj_pr,as.Date("2100-10-17"), as.Date("2100-11-01") )
-
-# temperature subset selection
 adj_tas <- exclude_time_range(tas, as.Date("2014-11-22"), as.Date("2014-12-07") )
 adj_tas <- exclude_time_range(adj_tas,as.Date("2100-10-17"), as.Date("2100-11-01") )
+
+# precipitation same subset selection
+adj_pr <- exclude_time_range(pr, as.Date("2014-11-22"), as.Date("2014-12-07") )
+adj_pr <- exclude_time_range(adj_pr,as.Date("2100-10-17"), as.Date("2100-11-01") )
 
 # creation of the date sequence
 date_sequence <- seq(as.Date("2014-12-07"), as.Date("2100-10-16"), by = "day")
@@ -201,53 +181,65 @@ date_sequence <- seq(as.Date("2014-12-07"), as.Date("2100-10-16"), by = "day")
 # creation of dataframe with the dates of the previous sequence
 vars_df <- data.frame(date = date_sequence)
 
-vars_df$precipitation <- adj_pr$precipitation
 vars_df$temperature <- adj_tas$temperature
+vars_df$precipitation <- adj_pr$precipitation
+
+# addition of latent heat flux with linear interpolation to obtain daily resolution
+vars_df$latent_heat_flux <- approx(x= hfls$date, y = hfls$latent_heat_flux, xout = vars_df$date)$y
 
 # addition of evapotranspiration with linear interpolation to obtain daily resolution
-vars_df$evapotranspiration <- approx(x= evspsbl$date, y = evspsbl$evapotranspiration, xout = vars_df$date)$y
+vars_df$evspsbl <- approx(x= evspsbl$date, y = evspsbl$evapotranspiration, xout = vars_df$date)$y
 
 # addition of net radiation with linear interpolation to obtain daily resolution
-vars_df$potential_evapotranspiration_energy_units <- approx(x= radiation_df$date, y = radiation_df$pet, xout = vars_df$date)$y
+vars_df$potential_evapotranspiration <- approx(x= radiation_df$date, y = radiation_df$pet, xout = vars_df$date)$y
 
 ```
 
 
-### Conversion of PET into mass units
-
-evapotranspiration is already in mass units. With the following function also the potential evapotranspiration gets converted into mass units.
+### Conversion of ET and PET into mass units
 
 ```{r}
 
-# calculate potential evapotranspiration (pet)
-vars_df$potential_evapotranspiration <- apply(vars_df[, c("temperature", "potential_evapotranspiration_energy_units")], 1, function(x) convert_et(x[1], x[2], patm)) # returns the potential water mass flux in mm d-1 (eqv. to kg m-2)
+# calculate evapotranspiration (et)
+vars_df$evapotranspiration <- apply(vars_df[, c("temperature", "latent_heat_flux")], 1, function(x) convert_et(x[1], x[2], patm)) # returns the water mass flux in mm d-1 (eqv. to kg m-2)
 
-# remove energy units row from dataframe
-vars_df <- select(vars_df, -potential_evapotranspiration_energy_units)
+# calculate potential evapotranspiration (pet)
+vars_df$evapotranspiration <- apply(vars_df[, c("temperature", "potential_evapotranspiration")], 1, function(x) convert_et(x[1], x[2], patm)) # returns the potential water mass flux in mm d-1 (eqv. to kg m-2)
 
 ```
 
 
 ## Analysis
 
-### Comparison of the evapotranspiration and the potential evapotranspiration
+### Comparison of the CMIP6 evspsbl and the calculated et with convert_et
 
 ```{r}
 
 ann_evspsbl_et <- vars_df |>
   mutate(year = year(date)) |>
   group_by(year) |>
-  summarise(et = sum(evapotranspiration), pet = sum(potential_evapotranspiration))
+  summarise(et = sum(evapotranspiration), evspsbl = sum(evspsbl))
 
 ann_evspsbl_et |>
-  pivot_longer(cols = c(et, pet), names_to = "Flux") |> 
+  pivot_longer(cols = c(et, evspsbl), names_to = "Flux") |> 
   ggplot(aes(x = year, y = value, color = Flux)) +
   geom_line() +
   labs(y = "Flux (mm/yr)")
 
 ```
-can the actual evapotranspiration be higher than the potential evapotranspiration?
 
+
+The plot indicates that the two curves occupy distinct flux-ranges.The dissimilarity was therefore assessed through statistical analysis. A t-test was performed to ascertain their statistical difference.
+
+```{r}
+
+t_test_result <- t.test(vars_df$evapotranspiration, vars_df$evspsbl)
+
+print(t_test_result)
+
+```
+
+In this scenario, the null hypothesis states that the two variables exhibit no significant difference. The computed p-value, being notably low and falling within the region of rejection, leads to the rejection of the null hypothesis, indicating a significant distinction between the evspsbl- and evapotranspiration-variable.
 
 
 ### Annual totals of evapotranspiration, potential evapotranspiration and precipitation
@@ -256,28 +248,24 @@ The evspsbl variable was chosen, as it is a direct variable of the CMIP6ng data 
 
 ```{r}
 
-ann_et_pet_pr <- vars_df |>
+ann_et_pr <- vars_df |>
   mutate(year = year(date)) |>
   group_by(year) |>
-  summarise(et = sum(evapotranspiration), pet = sum(potential_evapotranspiration), prec = sum(precipitation))
+  summarise(et = sum(evspsbl), prec = sum(precipitation))
 
 # remove year 2014 because data not available for whole year
-ann_et_pet_pr <- ann_et_pet_pr[-1, ]
+ann_et_pr <- ann_et_pr[-1, ]
 
-ann_et_pet_pr |>
-  pivot_longer(cols = c(et, pet, prec), names_to = "Flux") |> 
+ann_et_pr |>
+  pivot_longer(cols = c(et, prec), names_to = "Flux") |> 
   ggplot(aes(x = year, y = value, color = Flux)) +
   geom_line() +
   labs(y = "Flux (mm/yr)")
 
 ```
-explain this figure
 
-add other values and plot again
 
-20 long, 30 lat, curves et and prec were almost the same
 water-limited system, runoff probably small or constant, no long-term change in storage
-
 
 ## Snow Simulation
 
@@ -290,7 +278,7 @@ vars_df <- vars_df |>
 
 
 vars_df <- vars_df |>
-  mutate(wbal = liquid_to_soil - evapotranspiration, wbal_pet = liquid_to_soil - potential_evapotranspiration)
+  mutate(wbal = liquid_to_soil - evspsbl)
 
 ```
 
@@ -299,19 +287,12 @@ vars_df <- vars_df |>
 
 ```{r}
 
-# calculate cumulative water deficit
 out_cwd <- cwd(vars_df,
                varname_wbal = "wbal",
                varname_date = "date",
                thresh_terminate = 0.0,
                thresh_drop = 0.0)
 
-# calculate potential cumulative water deficit
-out_pcwd <- cwd(vars_df,
-               varname_wbal = "wbal_pet",
-               varname_date = "date",
-               thresh_terminate = 0.0,
-               thresh_drop = 0.0)
 
 ```
 
@@ -320,9 +301,6 @@ Retain only events of a minimum length of 20 days.
 ```{r}
 
 out_cwd$inst <- out_cwd$inst |>
-  filter(len >= 20)
-
-out_pcwd$inst <- out_pcwd$inst |>
   filter(len >= 20)
 
 ```
@@ -345,32 +323,8 @@ ggplot() +
 
 
 ```
-now how to interpret this figure
-
-
-```{r}
-
-ggplot() +
-  geom_rect(
-    data = out_pcwd$inst,
-    aes(xmin = date_start, xmax = date_end, ymin = -99, ymax = 99999),
-    fill = rgb(0,0,0,0.3),
-    color = NA) +
-  geom_line(data  =  out_pcwd$df, aes(date, precipitation), size  =  0.3, color = "royalblue") +
-  geom_line(data  =  out_pcwd$df, aes(date, deficit), color = "tomato") +
-  coord_cartesian(ylim = c(0, 200)) +
-  theme_classic() +
-  labs(x = "Date", y = "Potential cumulative water deficit (mm)")
-
-```
 
 
 # Literature
 
 Air Pressure | National Oceanic and Atmospheric Administration: https://www.noaa.gov/jetstream/atmosphere/air-pressure, last access: 23 March 2024.
-
-
-
-
-
-

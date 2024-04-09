@@ -1,10 +1,10 @@
 # function gridpoint extraction
 
-gridpoint_extraction <- function(data, variable) {
+gridpoint_extraction <- function(data, variable, longitude=46.95286466584806, latitude=7.4351598698922405) {
 
   # indices of the grid point
-  start_lon <- 20  # longitude index
-  start_lat <- 30 # latitude index
+  start_lon <- longitude
+  start_lat <- latitude
 
   # get days
   var_dates <- as.Date(data$dim$time$vals, origin = '1850-01-01')

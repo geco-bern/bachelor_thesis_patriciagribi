@@ -6,6 +6,16 @@ output: html_document
 ---
 
 
+# global extraction 
+
+
+https://towardsdatascience.com/how-to-crack-open-netcdf-files-in-r-and-extract-data-as-time-series-24107b70dcd 
+
+
+
+
+
+
 # Plot
 
 
