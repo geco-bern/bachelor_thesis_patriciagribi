@@ -37,6 +37,7 @@ library(RColorBrewer)
 library(lattice)
 library(cwd)
 library(lubridate)
+library(rpmodel)
 
 ```
 
@@ -53,9 +54,6 @@ pr_CMIP6ng_data <- nc_open("/home/patricia/data_download/CMIP6ng_download/cmip6-
 
 # air temperature (K)
 tas_CMIP6ng_data <- nc_open("/home/patricia/data_download/CMIP6ng_download/cmip6-ng/tas/day/native/tas_day_CESM2_ssp585_r1i1p1f1_native.nc")
-
-# atmospheric pressure (Pa)
-patm <- 101320 # standard air pressure at sea level in Pa (1013.2 mb) (Air Pressure | National Oceanic and Atmospheric Administration, 2024)
 
 # surface upwelling longwave radiation (W m-2)
 rlus_CMIP6ng_data <- nc_open("/home/patricia/data_download/CMIP6ng_download/cmip6-ng/rlus/mon/native/rlus_mon_CESM2_ssp585_r1i1p1f1_native.nc")
@@ -169,9 +167,6 @@ radiation_df <- merge(merge(merge(rlus, rlds, by = "date"), rsds, by = "date"), 
 # calculate net radiation and add to dataframe
 radiation_df$net_radiation <- (radiation_df$down_shortwave_radiation - radiation_df$up_shortwave_radiation) + (radiation_df$down_longwave_radiation - radiation_df$up_longwave_radiation)
 
-# calculate factor 1.26 * net radiation
-radiation_df$pet <- radiation_df$net_radiation * 1.26
-
 ```
 
 In order to calculate the potential evapotranspiration the net radiation was needed. The net radiation is calculated as net shortwave radiation + net longwave radiation (Citation). The approach in this thesis considers the potential evapotranspiration as 1.26 * the net radiation (Citation). 
@@ -208,22 +203,35 @@ vars_df$temperature <- adj_tas$temperature
 vars_df$evapotranspiration <- approx(x= evspsbl$date, y = evspsbl$evapotranspiration, xout = vars_df$date)$y
 
 # addition of net radiation with linear interpolation to obtain daily resolution
-vars_df$potential_evapotranspiration_energy_units <- approx(x= radiation_df$date, y = radiation_df$pet, xout = vars_df$date)$y
+vars_df$eet_energy_units <- approx(x= radiation_df$date, y = radiation_df$net_radiation, xout = vars_df$date)$y
 
 ```
 
 
-### Conversion of PET into mass units
+### PET
 
 evapotranspiration is already in mass units. With the following function also the potential evapotranspiration gets converted into mass units.
 
 ```{r}
 
+# höheninfo modell grid
+
+# calculate patm: https://github.com/geco-bern/rpmodel/blob/master/R/subroutines.R
+
+elv <- 0
+
+patm <- 101325
+
+#patm <- calc_patm(0)
+
 # calculate potential evapotranspiration (pet)
-vars_df$potential_evapotranspiration <- apply(vars_df[, c("temperature", "potential_evapotranspiration_energy_units")], 1, function(x) convert_et(x[1], x[2], patm)) # returns the potential water mass flux in mm d-1 (eqv. to kg m-2)
+vars_df$eet <- apply(vars_df[, c("temperature", "eet_energy_units")], 1, function(x) convert_et(x[1], x[2], patm)) # returns the potential water mass flux in mm d-1 (eqv. to kg m-2)
 
 # remove energy units row from dataframe
-vars_df <- select(vars_df, -potential_evapotranspiration_energy_units)
+vars_df <- select(vars_df, -eet_energy_units)
+
+# calculate factor 1.26 * eet
+vars_df$potential_evapotranspiration <- vars_df$eet * 1.26
 
 ```
 
@@ -246,7 +254,7 @@ ann_evspsbl_et |>
   labs(y = "Flux (mm/yr)")
 
 ```
-can the actual evapotranspiration be higher than the potential evapotranspiration?
+can the actual evapotranspiration be higher than the potential evapotranspiration? Why are there parts where this is the case?
 
 
 
@@ -254,7 +262,7 @@ can the actual evapotranspiration be higher than the potential evapotranspiratio
 
 The evspsbl variable was chosen, as it is a direct variable of the CMIP6ng data and was not calculated indirectly as with the evapotranspiration variable. Which was obtained from the information on pressure, latent heat flux and temperature. As observable in the plot below the data matches very well with the precipiation.
 
-```{r}
+```{r, warning=FALSE}
 
 ann_et_pet_pr <- vars_df |>
   mutate(year = year(date)) |>
@@ -345,7 +353,7 @@ ggplot() +
 
 
 ```
-now how to interpret this figure
+this result is strange as in the plot above it was shown that the precipitation is always higher than the evapotranspiration. How can it be that the deficit is higher now than the precipitation?
 
 
 ```{r}
@@ -363,6 +371,8 @@ ggplot() +
   labs(x = "Date", y = "Potential cumulative water deficit (mm)")
 
 ```
+
+
 
 
 # Literature
