@@ -86,6 +86,10 @@ Finally, it'll be difficult to determine how deeply to analyze the data to make 
 
 This research project aims to contribute to our understanding of trends in cumulative water deficits across the globe. This CWD-algorithm has never been applied to the CMIP6 data, nor to models with future projections. In general, the daily resolution and the units considered (mm) help to establish a concrete link to the storage capacity of the soil and the soil depth. Finally, the results will allow direct and concrete conclusions to be drawn.
 
+## Reproducible Workflow
+
+Whenever the data is read (.Rmd files in the vignettes folder), the file path should be adjusted to indicate the location where the data is downloaded within the local repository. Instructions for data download can be found in the 'data-raw' folder of this repository. Alternatively, the data can be obtained by cloning the following repository on GitHub: https://github.com/geco-bern/CMIP6ng_download, following the provided instructions.
+
 ## Literature
 
 - Brunner, L., Hauser, M., Lorenz, R., and Beyerle, U.: The ETH Zurich CMIP6 next generation archive: technical documentation, https://doi.org/10.5281/zenodo.3734128, 2020.
