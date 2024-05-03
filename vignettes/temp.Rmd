@@ -1,0 +1,50 @@
+---
+title: "temp"
+author: "Patricia Gribi"
+date: "2024-04-23"
+output: html_document
+---
+
+```{r}
+# addition of evapotranspiration with linear interpolation to obtain daily resolution
+vars_df$evapotranspiration <- approx(x= evspsbl$date, y = evspsbl$evapotranspiration, xout = vars_df$date)$y
+
+# check whether monthly totals of daily values are identical to original monthly data
+monthly_evapotranspiration <- vars_df |>
+  mutate(month = format(date, "%Y-%m")) |>
+  group_by(month) |>
+  summarise(total_evapotranspiration = sum(evapotranspiration))
+
+
+# addition of net radiation with linear interpolation to obtain daily resolution
+vars_df$rnet <- approx(x= radiation_df$date, y = radiation_df$net_radiation, xout = vars_df$date)$y
+
+# check whether monthly totals of daily values are identical to original monthly data
+monthly_radiation <- vars_df |>
+  mutate(month = format(date, "%Y-%m")) |>
+  group_by(month) |>
+  summarise(total_radiation = sum(rnet))
+
+
+```
+
+
+
+
+```{r}
+
+# addition of evapotranspiration with linear interpolation to obtain daily resolution
+vars_df$evapotranspiration <- approx(x= evspsbl$date, y = evspsbl$evapotranspiration, xout = vars_df$date)$y
+
+# check whether daily values mean over one month are identical to original monthly data
+monthly_evapotranspiration <- vars_df |>
+  mutate(month = format(date, "%Y-%m")) |>
+  group_by(month) |>
+  summarise(mean_evapotranspiration = mean(evapotranspiration))
+
+
+```
+
+
+
+

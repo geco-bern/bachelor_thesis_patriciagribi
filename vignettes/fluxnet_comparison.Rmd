@@ -1,0 +1,88 @@
+---
+title: "FLUXNET comparison"
+author: "Patricia Gribi"
+date: "2024-04-30"
+output: html_document
+---
+
+
+# https://fluxnet.org/data/fluxnet2015-dataset/subset-data-product/
+
+
+```{r}
+
+# data reading
+fluxnet <- read.csv(paste0(here::here(),"/data-raw/FLX_FR-Pue_FLUXNET2015_FULLSET_DD_2000-2014_2-3.csv"), header=TRUE)
+net_radiation_df <- read.csv(paste0(here::here(),"/data/net_radiation_df.csv"), header=TRUE)
+
+
+
+# variable selection
+fluxnet <- fluxnet |>
+  select(
+  TIMESTAMP,
+  P_F, # precipitation (mm d-1)
+  LE_F_MDS, # latent heat flux (W m-2)
+  TA_F, # temperature (°C)
+  NETRAD) # net radiation (W m-2)
+
+```
+
+units are correct
+
+
+## PET and ET Calculation
+
+
+```{r}
+
+patm <- 101325
+
+# ET -----------------------------------
+
+# calculate equilibrium evapotranspiration (eet) in mass units
+fluxnet$et <- apply(fluxnet[, c("TA_F", "LE_F_MDS")], 1, function(x) convert_et(x[1], x[2], patm)) # returns the potential water mass flux in mm d-1 (eqv. to kg m-2)
+
+# PET ----------------------------------
+
+# calculate equilibrium evapotranspiration (eet) in mass units
+fluxnet$eet <- apply(fluxnet[, c("TA_F", "NETRAD")], 1, function(x) convert_et(x[1], x[2], patm)) # returns the potential water mass flux in mm d-1 (eqv. to kg m-2)
+
+# calculate factor 1.26 * eet
+fluxnet$pet <- fluxnet$eet * 1.26
+
+```
+
+
+## Plot 
+
+
+```{r}
+
+fluxnet$date <- as.Date(as.character(fluxnet$TIMESTAMP), format = "%Y%m%d")
+
+
+year_fluxnet <- fluxnet |>
+  mutate(year = year(date)) |>
+  group_by(year) |>
+  summarise(et = sum(et), pet = sum(pet), prec = sum(P_F))
+
+
+year_fluxnet |>
+  pivot_longer(cols = c(et, pet, prec), names_to = "Flux") |> 
+  ggplot(aes(x = year, y = value, color = Flux)) +
+  geom_line() +
+  ggtitle("Annual totals of et, pet and prec")+
+  labs(y = "Flux (mm/yr)")
+
+```
+
+
+
+
+
+
+
+
+
+

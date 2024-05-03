@@ -1,0 +1,362 @@
+---
+title: "One Gridpoint"
+author: "Patricia Gribi"
+date: "2024-03-19"
+output: html_document
+---
+
+
+# Cumulative Water Deficits over Time for one Gridpoint
+
+
+## Data Wrangling
+
+
+### Overview
+
+The data wrangling started with reading the data and loading the required libraries. The CMIP6ng data structure is organised in such a way that each variable is contained in a separate file. Therefore, each variable had to be read in individually. The data format is netcdf and contains a global grid. However, this is kept in a purely positive format (often preferred for climate data). A grid point was extracted for every variable. Also some unit conversions had to be performed. Variables such as precipitation and evapotranspiration were converted to the desired mm day-1 format (equivalent to kg m-2). The temporal resolution of the individual variables is daily or monthly. Linear interpolation was therefore applied to the variables that are only available monthly in order to obtain the same resolution for all variables. Then, evapotranspiration and potential evapotranspiration were calculated over time for a specific grid point. Furthermore, snow was modelled. Thanks to all these steps, the cwd algorithm could finally be applied to the data.
+
+
+### Library Loading
+
+```{r, echo=FALSE}
+
+# load libraries
+source("../R/load_libraries.R")
+load_libraries()
+
+```
+
+
+### Data Reading
+
+```{r}
+
+# reading data from repo
+evspsbl <- read.csv(paste0(here::here(),"/data/gridpoint_evspsbl.csv"), header=TRUE)
+pr <- read.csv(paste0(here::here(),"/data/gridpoint_pr.csv"), header=TRUE)
+tas <- read.csv(paste0(here::here(),"/data/gridpoint_tas.csv"), header=TRUE)
+rlus <- read.csv(paste0(here::here(),"/data/gridpoint_rlus.csv"), header=TRUE)
+rlds <- read.csv(paste0(here::here(),"/data/gridpoint_rlds.csv"), header=TRUE)
+rsds <- read.csv(paste0(here::here(),"/data/gridpoint_rsds.csv"), header=TRUE)
+rsus <- read.csv(paste0(here::here(),"/data/gridpoint_rsus.csv"), header=TRUE)
+
+```
+
+
+### Column Renaming and Unit Conversions
+
+This research project aims to consistently represent the variables
+across all data sets with the following units:
+
+- **Date**: year-month-day (xxxx-xx-xx)
+- **Precipitation** and **(potential) Evapotranspiration**: in mm day-1 (equivalent to kg m-2)
+- **Temperature (tas)**: in degree Celsius (°C)
+- **Atmospheric Pressure**: in Pascal (Pa)
+- **Radiation**: in W m-2
+
+Therefore some unit conversions had to be conducted.
+
+```{r}
+
+# evapotranspiration
+colnames(evspsbl) <- c("date", "evapotranspiration") # column renaming
+evspsbl$evapotranspiration <- evspsbl$evapotranspiration * 86400 # conversion to mm day-1
+
+# precipitation
+colnames(pr) <- c("date", "precipitation") # column renaming
+pr$precipitation <- pr$precipitation * 86400 # conversion to mm day-1
+
+# temperature
+colnames(tas) <- c("date", "temperature") # column renaming
+tas$temperature <- tas$temperature - 273.15 # conversion to °C
+
+# radiation
+colnames(rlus) <- c("date", "up_longwave_radiation") # column renaming
+colnames(rlds) <- c("date", "down_longwave_radiation") # column renaming
+colnames(rsds) <- c("date", "down_shortwave_radiation") # column renaming
+colnames(rsus) <- c("date", "up_shortwave_radiation") # column renaming
+
+# merge radiation variables into one dataframe
+radiation_df <- merge(merge(merge(rlus, rlds, by = "date"), rsds, by = "date"), rsus, by = "date")
+
+# calculate net radiation and add to dataframe
+radiation_df$net_radiation <- (radiation_df$down_shortwave_radiation - radiation_df$up_shortwave_radiation) + (radiation_df$down_longwave_radiation- radiation_df$up_longwave_radiation)
+
+net_radiation_df <- select(radiation_df, date, net_radiation)
+write.csv(net_radiation_df, "../data/net_radiation_df.csv", row.names = FALSE)
+
+
+```
+
+In order to calculate the potential evapotranspiration the net radiation was needed. The net radiation is calculated as net shortwave radiation + net longwave radiation (Brönnimann 2018, p. 89). 
+
+
+### Time-Range Adjustments
+
+To obtain a daily resolution for all variables, linear interpolation was applied to monthly available variables.
+
+```{r}
+
+# creation of new dataframe to calculate pet
+
+source("../R/exclude_time_range.R")
+
+# precipitation subset selection
+adj_pr <- exclude_time_range(pr, as.Date("2014-11-22"), as.Date("2014-11-30") )
+
+# temperature subset selection
+adj_tas <- exclude_time_range(tas, as.Date("2014-11-22"), as.Date("2014-11-30") )
+
+# creation of the date sequence
+date_sequence <- seq(as.Date("2014-12-01"), as.Date("2100-10-31"), by = "day")
+
+# creation of dataframe with the dates of the previous sequence
+vars_df <- data.frame(date = date_sequence)
+
+vars_df$precipitation <- adj_pr$precipitation
+vars_df$temperature <- adj_tas$temperature
+
+```
+
+
+### Resolution Adjustments
+
+```{r}
+
+# resolution adjustments evapotranspiration -----------------------------------
+
+# dataframe with dates column
+daily_evapotranspiration <- data.frame(date = date_sequence)
+
+daily_evapotranspiration <- merge(daily_evapotranspiration, evspsbl, by = "date", all.x = TRUE)
+
+
+daily_evapotranspiration <- daily_evapotranspiration|>
+  mutate(month = format(date, "%Y-%m"))
+
+
+# monthly values
+monthly_values <- daily_evapotranspiration |>
+  group_by(month = format(date, "%Y-%m")) |>
+  summarize(monthly_evapotranspiration = mean(evapotranspiration, na.rm = TRUE))
+
+# Fill NA values with monthly averages
+filled_evapotranspiration_df <- daily_evapotranspiration |>
+  left_join(monthly_values, by = c("month")) |>
+  mutate(evapotranspiration = ifelse(is.na(evapotranspiration), 
+                                     monthly_evapotranspiration, 
+                                     evapotranspiration)) |>
+  select(-month, -monthly_evapotranspiration)
+
+
+# resolution adjustments radiation---------------------------------------------
+
+# dataframe with dates column
+daily_net_radiation <- data.frame(date = date_sequence)
+
+daily_net_radiation <- merge(daily_net_radiation, net_radiation_df, by = "date", all.x = TRUE)
+
+daily_net_radiation <- daily_net_radiation|>
+  mutate(month = format(date, "%Y-%m"))
+
+
+# monthly values
+monthly_values <- daily_net_radiation |>
+  group_by(month = format(date, "%Y-%m")) |>
+  summarize(monthly_net_radiation = mean(net_radiation, na.rm = TRUE))
+
+# Fill NA values with monthly averages
+filled_net_radiation_df <- daily_net_radiation |>
+  left_join(monthly_values, by = c("month")) |>
+  mutate(net_radiation = ifelse(is.na(net_radiation), 
+                                     monthly_net_radiation, 
+                                     net_radiation)) |>
+  select(-month, -monthly_net_radiation)
+
+
+# add adjusted variables to the dataframe
+
+vars_df$evapotranspiration <- filled_evapotranspiration_df$evapotranspiration
+vars_df$rnet <- filled_net_radiation_df$net_radiation
+
+# check for na values in the dataframe
+colSums(is.na(vars_df))
+
+
+```
+
+
+### PET Calculation
+
+evapotranspiration is already obtained in mass units. With the following function also the equilibrium evapotranspiration (eet) gets converted into mass units. The result is calculated * 1.26 to obtain the potential evapotranspiration.
+
+```{r}
+
+# höheninfo modell grid
+
+# calculate patm: https://github.com/geco-bern/rpmodel/blob/master/R/subroutines.R
+
+elv <- 0
+
+patm <- 101325
+
+#patm <- calc_patm(0)
+
+# calculate equilibrium evapotranspiration (eet) in mass units
+vars_df$eet <- apply(vars_df[, c("temperature", "rnet")], 1, function(x) convert_et(x[1], x[2], patm)) # returns the potential water mass flux in mm d-1 (eqv. to kg m-2)
+
+# remove energy units row from dataframe
+vars_df <- select(vars_df, -rnet)
+
+# calculate factor 1.26 * eet
+vars_df$potential_evapotranspiration <- vars_df$eet * 1.26
+
+```
+
+
+## Annual totals of evapotranspiration, potential evapotranspiration and precipitation
+
+
+```{r, warning=FALSE}
+
+ann_et_pet_pr <- vars_df |>
+  mutate(year = year(date)) |>
+  group_by(year) |>
+  summarise(et = sum(evapotranspiration), pet = sum(potential_evapotranspiration), prec = sum(precipitation))
+
+# remove year 2014 because data not available for whole year
+ann_et_pet_pr <- ann_et_pet_pr[-1, ]
+
+ann_et_pet_pr |>
+  pivot_longer(cols = c(et, pet, prec), names_to = "Flux") |> 
+  ggplot(aes(x = year, y = value, color = Flux)) +
+  geom_line() +
+  ggtitle("Annual totals of et, pet and prec")+
+  labs(y = "Flux (mm/yr)")
+
+```
+
+
+## Snow Simulation
+
+Simulation of snow accumulation and melt based on temperature and precipitation.
+
+```{r}
+
+vars_df <- vars_df |>
+  mutate(precipitation = ifelse(temperature < 0, 0, precipitation),
+         snow = ifelse(temperature < 0, precipitation, 0)) |>
+  simulate_snow(varnam_prec = "precipitation", varnam_snow = "snow", varnam_temp = "temperature")
+
+
+vars_df <- vars_df |>
+  mutate(wbal = liquid_to_soil - evapotranspiration, wbal_pet = liquid_to_soil - potential_evapotranspiration)
+
+
+plot_et <- vars_df |>
+  ggplot(aes(date, evapotranspiration)) +
+  geom_line()
+
+plot_liquid_to_soil <- vars_df |>
+  ggplot(aes(date, liquid_to_soil)) +
+  geom_line()
+
+plot_wbal <- vars_df |>
+  ggplot(aes(date, wbal)) +
+  geom_line()
+
+plot_et
+plot_liquid_to_soil
+plot_wbal
+
+
+```
+
+
+## Cumulative Deficit Algorithm
+
+```{r}
+
+# calculate cumulative water deficit
+out_cwd <- cwd(vars_df,
+               varname_wbal = "wbal",
+               varname_date = "date",
+               thresh_terminate = 0.0,
+               thresh_drop = 0.0)
+
+# calculate potential cumulative water deficit
+out_pcwd <- cwd(vars_df,
+               varname_wbal = "wbal_pet",
+               varname_date = "date",
+               thresh_terminate = 0.0,
+               thresh_drop = 0.0)
+
+```
+
+Retain only events of a minimum length of 20 days.
+
+```{r}
+
+out_cwd$inst <- out_cwd$inst |>
+  filter(len >= 20)
+
+out_pcwd$inst <- out_pcwd$inst |>
+  filter(len >= 20)
+
+```
+
+
+
+```{r}
+
+ggplot() +
+  geom_rect(
+    data = out_cwd$inst,
+    aes(xmin = date_start, xmax = date_end, ymin = -99, ymax = 99999),
+    fill = rgb(0,0,0,0.3),
+    color = NA) +
+  geom_line(data  =  out_cwd$df, aes(date, precipitation), size  =  0.3, color = "royalblue") +
+  geom_line(data  =  out_cwd$df, aes(date, deficit), color = "tomato") +
+  coord_cartesian(ylim = c(0, 200)) +
+  theme_classic() +
+  labs(x = "Date", y = "Cumulative water deficit (mm)")
+
+
+```
+
+
+this plot means that from 2020 on Niger will face a continuing water deficit.
+Potential cumulative water deficit should be higher than cwd. 
+
+
+```{r}
+
+ggplot() +
+  geom_rect(
+    data = out_pcwd$inst,
+    aes(xmin = date_start, xmax = date_end, ymin = -99, ymax = 99999),
+    fill = rgb(0,0,0,0.3),
+    color = NA) +
+  geom_line(data  =  out_pcwd$df, aes(date, precipitation), size  =  0.3, color = "royalblue") +
+  geom_line(data  =  out_pcwd$df, aes(date, deficit), color = "tomato") +
+  coord_cartesian(ylim = c(0, 200)) +
+  theme_classic() +
+  labs(x = "Date", y = "Potential cumulative water deficit (mm)")
+
+```
+
+
+
+
+# Literature
+
+Air Pressure | National Oceanic and Atmospheric Administration: https://www.noaa.gov/jetstream/atmosphere/air-pressure, last access: 23 March 2024.
+
+Brönnimann, S. P. D.: Klimatologie, 1st ed., utb GmbH, Stuttgart, 320 pp., https://doi.org/10.36198/9783838548197, 2018.
+
+
+
+
+
+
