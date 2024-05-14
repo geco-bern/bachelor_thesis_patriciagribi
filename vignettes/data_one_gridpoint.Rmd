@@ -62,8 +62,19 @@ To gain insights into the grid structure delineated in the CMIP6 data, an examin
 ```{r, echo=FALSE}
 
 # get information about the grid
-#print(pr_CMIP6ng_data)
-print(evspsbl_CMIP6ng_data)
+print(pr_CMIP6ng_data)
+#print(evspsbl_CMIP6ng_data)
+
+# List all variables in the NetCDF file
+print(pr_CMIP6ng_data$var)
+
+# List all dimensions in the NetCDF file
+print(pr_CMIP6ng_data$dim)
+
+nc_stack <- stack("/home/patricia/data_download/CMIP6ng_download/cmip6-ng/evspsbl/mon/native/evspsbl_mon_CESM2_ssp585_r1i1p1f1_native.nc")
+
+# Print the stack to see its structure
+print(nc_stack)
 
 ```
 
@@ -102,19 +113,19 @@ The gridpoint_extraction function was implemented to retrieve a specific grid po
 source("../R/gridpoint_extraction.R")
 
 # evapotranspiration extraction
-evspsbl <- gridpoint_extraction(evspsbl_CMIP6ng_data, "evspsbl", 10, 20)
+evspsbl <- gridpoint_extraction(evspsbl_CMIP6ng_data, "evspsbl")
 
 # precipitation extraction
-pr <- gridpoint_extraction(pr_CMIP6ng_data, "pr", 10, 20)
+pr <- gridpoint_extraction(pr_CMIP6ng_data, "pr")
 
 # temperature extraction
-tas <- gridpoint_extraction(tas_CMIP6ng_data, "tas", 10, 20)
+tas <- gridpoint_extraction(tas_CMIP6ng_data, "tas")
 
 # radiation gridpoint extraction
-rlus <- gridpoint_extraction(rlus_CMIP6ng_data, "rlus", 10, 20)
-rlds <- gridpoint_extraction(rlds_CMIP6ng_data, "rlds", 10, 20)
-rsds <- gridpoint_extraction(rsds_CMIP6ng_data, "rsds", 10, 20)
-rsus <- gridpoint_extraction(rsus_CMIP6ng_data, "rsus", 10, 20)
+rlus <- gridpoint_extraction(rlus_CMIP6ng_data, "rlus")
+rlds <- gridpoint_extraction(rlds_CMIP6ng_data, "rlds")
+rsds <- gridpoint_extraction(rsds_CMIP6ng_data, "rsds")
+rsus <- gridpoint_extraction(rsus_CMIP6ng_data, "rsus")
 
 ```
 

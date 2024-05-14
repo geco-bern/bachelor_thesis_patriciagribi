@@ -17,5 +17,7 @@ load_libraries <- function(){
   library(cwd)
   library(lubridate)
   library(rpmodel)
+  library(bigleaf)
+  library(raster)
 
 }
