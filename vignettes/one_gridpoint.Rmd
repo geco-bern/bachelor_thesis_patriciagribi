@@ -1,0 +1,415 @@
+---
+title: "One Gridpoint"
+author: "Patricia Gribi"
+date: "2024-03-19"
+output: html_document
+---
+
+
+# Cumulative Water Deficits over Time for one Gridpoint
+
+
+## Data Wrangling
+
+
+### Overview
+
+The data wrangling started with reading the data and loading the required libraries. The CMIP6ng data structure is organised in such a way that each variable is contained in a separate file. Therefore, each variable had to be read in individually. The data format is netcdf and contains a global grid. However, this is kept in a purely positive format (often preferred for climate data). A grid point was extracted for every variable. Also some unit conversions had to be performed. Variables such as precipitation and evapotranspiration were converted to the desired mm day-1 format (equivalent to kg m-2). The temporal resolution of the individual variables is daily or monthly. Linear interpolation was therefore applied to the variables that are only available monthly in order to obtain the same resolution for all variables. Then, evapotranspiration and potential evapotranspiration were calculated over time for a specific grid point. Furthermore, snow was modelled. Thanks to all these steps, the cwd algorithm could finally be applied to the data.
+
+
+### Library Loading
+
+```{r, echo=FALSE}
+
+# libraries
+
+library(terra)
+library(readr)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(viridis)
+library(viridisLite)
+library(weathermetrics)
+library(ncdf4)
+library(chron)
+library(RColorBrewer)
+library(lattice)
+library(cwd)
+library(lubridate)
+library(rpmodel)
+
+```
+
+
+### Data Reading
+
+**Reproducible workflow**: The file path should be adjusted to indicate the location where the data is downloaded within the local repository. Instructions for data download can be found in the 'data-raw' folder of this repository. Alternatively, the data can be obtained by cloning the following repository on GitHub: https://github.com/geco-bern/CMIP6ng_download, following the provided instructions.
+
+```{r, echo=FALSE}
+
+# to read the data from a local repository, adjust the file path following the nc_open("your/local/data/download/data.nc") function call to specify the location where the data is stored after download
+
+# evapotranspiration (kg m-2 s-1)
+evspsbl_CMIP6ng_data <- nc_open("/home/patricia/data_download/CMIP6ng_download/cmip6-ng/evspsbl/mon/native/evspsbl_mon_CESM2_ssp585_r1i1p1f1_native.nc") 
+
+# precipitation (kg m-2 s-1)
+pr_CMIP6ng_data <- nc_open("/home/patricia/data_download/CMIP6ng_download/cmip6-ng/pr/day/native/pr_day_CESM2_ssp585_r1i1p1f1_native.nc") 
+
+# air temperature (K)
+tas_CMIP6ng_data <- nc_open("/home/patricia/data_download/CMIP6ng_download/cmip6-ng/tas/day/native/tas_day_CESM2_ssp585_r1i1p1f1_native.nc")
+
+# surface upwelling longwave radiation (W m-2)
+rlus_CMIP6ng_data <- nc_open("/home/patricia/data_download/CMIP6ng_download/cmip6-ng/rlus/mon/native/rlus_mon_CESM2_ssp585_r1i1p1f1_native.nc")
+
+# surface downwelling longwave radiation (W m-2)
+rlds_CMIP6ng_data <- nc_open("/home/patricia/data_download/CMIP6ng_download/cmip6-ng/rlds/mon/native/rlds_mon_CESM2_ssp585_r1i1p1f1_native.nc")
+
+# surface downwelling shortwave radiation (W m-2)
+rsds_CMIP6ng_data <- nc_open("/home/patricia/data_download/CMIP6ng_download/cmip6-ng/rsds/mon/native/rsds_mon_CESM2_ssp585_r1i1p1f1_native.nc")
+
+# surface upwelling shortwave radiation (W m-2)
+rsus_CMIP6ng_data <- nc_open("/home/patricia/data_download/CMIP6ng_download/cmip6-ng/rsus/mon/native/rsus_mon_CESM2_ssp585_r1i1p1f1_native.nc")
+
+```
+
+
+### Grid Information
+
+To gain insights into the grid structure delineated in the CMIP6 data, an examination was conducted on the netCDF file with the precipitation variable as a representative case. By printing the dataset useful information was obtained. Within the dimensions section, it became clear that the latitude is represented as double, measured in degrees north, spanning from -90 to 90. Correspondingly, the longitude is also expressed as double, denominated in degrees east, ranging from 0 to 360. The longitudinal values are aligned along the x-axis, while the latitudinal values are aligned along the y-axis. 
+
+
+```{r}
+
+# get information about the grid
+print(pr_CMIP6ng_data)
+
+```
+
+
+### Grid Conversion
+
+The function preserves the position of the prime meridian (0 degrees longitude) and ensures that longitudes within the range of 0 to 180 degrees remain unchanged as well. Any negative longitudes are shifted to the equivalent positive values in the 0 to 360-degree range. 
+
+```{r}
+
+# function to convert longitudes from -180-180 range to 0-360 range 
+
+convert_longitude_reverse <- function(lon) {
+  lon <- lon + 360 * (lon < 0)
+  return(lon)
+}
+
+# example values
+lon <- c(0, -1, -179, -62)
+converted_lon <- convert_longitude_reverse(lon)
+print(converted_lon)
+
+```
+
+
+### Gridpoint Extraction 
+
+The gridpoint_extraction function was implemented to retrieve a specific grid point from the supplied dataset. Consequently, it facilitates the expression of the variable at a designated spatial location across time. The functionality of this function encompasses the provision of longitude and latitude as parameters. When these parameters are not provided to the function, default values are employed. In this function, the default parameter corresponds to the coordinates of the GIUB, specifically 46.95286466584806 latitude and 7.4351598698922405 longitude.
+
+
+```{r, echo=FALSE}
+
+# check dimension order
+#print(evspsbl_CMIP6ng_data$dim)
+
+source("../R/gridpoint_extraction.R")
+
+# evapotranspiration extraction
+evspsbl <- gridpoint_extraction(evspsbl_CMIP6ng_data, "evspsbl", 10, 20)
+
+# precipitation extraction
+pr <- gridpoint_extraction(pr_CMIP6ng_data, "pr", 10, 20)
+
+# temperature extraction
+tas <- gridpoint_extraction(tas_CMIP6ng_data, "tas", 10, 20)
+
+# radiation gridpoint extraction
+rlus <- gridpoint_extraction(rlus_CMIP6ng_data, "rlus", 10, 20)
+rlds <- gridpoint_extraction(rlds_CMIP6ng_data, "rlds", 10, 20)
+rsds <- gridpoint_extraction(rsds_CMIP6ng_data, "rsds", 10, 20)
+rsus <- gridpoint_extraction(rsus_CMIP6ng_data, "rsus", 10, 20)
+
+```
+
+
+### Column Renaming and Unit Conversions
+
+This research project aims to consistently represent the variables
+across all data sets with the following units:
+
+- **Date**: year-month-day (xxxx-xx-xx)
+- **Precipitation** and **(potential) Evapotranspiration**: in mm day-1 (equivalent to kg m-2)
+- **Temperature (tas)**: in degree Celsius (°C)
+- **Atmospheric Pressure**: in Pascal (Pa)
+- **Radiation**: in W m-2
+
+Therefore some unit conversions had to be conducted.
+
+```{r}
+
+# evapotranspiration
+colnames(evspsbl) <- c("date", "evapotranspiration") # column renaming
+evspsbl$evapotranspiration <- evspsbl$evapotranspiration * 86400 # conversion to mm day-1
+
+# precipitation
+colnames(pr) <- c("date", "precipitation") # column renaming
+pr$precipitation <- pr$precipitation * 86400 # conversion to mm day-1
+
+# temperature
+colnames(tas) <- c("date", "temperature") # column renaming
+tas$temperature <- tas$temperature - 273.15 # conversion to °C
+
+# radiation
+colnames(rlus) <- c("date", "up_longwave_radiation") # column renaming
+colnames(rlds) <- c("date", "down_longwave_radiation") # column renaming
+colnames(rsds) <- c("date", "down_shortwave_radiation") # column renaming
+colnames(rsus) <- c("date", "up_shortwave_radiation") # column renaming
+
+# merge radiation variables into one dataframe
+radiation_df <- merge(merge(merge(rlus, rlds, by = "date"), rsds, by = "date"), rsus, by = "date")
+
+# calculate net radiation and add to dataframe
+radiation_df$net_radiation <- (radiation_df$down_shortwave_radiation - radiation_df$up_shortwave_radiation) + (radiation_df$down_longwave_radiation - radiation_df$up_longwave_radiation)
+
+```
+
+In order to calculate the potential evapotranspiration the net radiation was needed. The net radiation is calculated as net shortwave radiation + net longwave radiation (Citation). 
+
+
+### Time-Range and Resolution Adjustments
+
+To obtain a daily resolution for all variables, linear interpolation was applied to monthly available variables.
+
+```{r}
+
+# creation of new dataframe to calculate pet
+
+source("../R/exclude_time_range.R")
+
+# precipitation subset selection
+adj_pr <- exclude_time_range(pr, as.Date("2014-11-22"), as.Date("2014-12-07") )
+adj_pr <- exclude_time_range(adj_pr,as.Date("2100-10-17"), as.Date("2100-11-01") )
+
+# temperature subset selection
+adj_tas <- exclude_time_range(tas, as.Date("2014-11-22"), as.Date("2014-12-07") )
+adj_tas <- exclude_time_range(adj_tas,as.Date("2100-10-17"), as.Date("2100-11-01") )
+
+# creation of the date sequence
+date_sequence <- seq(as.Date("2014-12-07"), as.Date("2100-10-16"), by = "day")
+
+# creation of dataframe with the dates of the previous sequence
+vars_df <- data.frame(date = date_sequence)
+
+vars_df$precipitation <- adj_pr$precipitation
+vars_df$temperature <- adj_tas$temperature
+
+# addition of evapotranspiration with linear interpolation to obtain daily resolution
+vars_df$evapotranspiration <- approx(x= evspsbl$date, y = evspsbl$evapotranspiration, xout = vars_df$date)$y
+
+# addition of net radiation with linear interpolation to obtain daily resolution
+vars_df$rnet <- approx(x= radiation_df$date, y = radiation_df$net_radiation, xout = vars_df$date)$y
+
+```
+
+
+### PET
+
+evapotranspiration is already in mass units. With the following function also the equilibrium evapotranspiration (eet) gets converted into mass units. The result is calculated * 1.26 to obtain the potential evapotranspiration.
+
+```{r}
+
+# höheninfo modell grid
+
+# calculate patm: https://github.com/geco-bern/rpmodel/blob/master/R/subroutines.R
+
+elv <- 0
+
+patm <- 101325
+
+#patm <- calc_patm(0)
+
+# calculate equilibrium evapotranspiration (eet) in mass units
+vars_df$eet <- apply(vars_df[, c("temperature", "rnet")], 1, function(x) convert_et(x[1], x[2], patm)) # returns the potential water mass flux in mm d-1 (eqv. to kg m-2)
+
+# remove energy units row from dataframe
+vars_df <- select(vars_df, -rnet)
+
+# calculate factor 1.26 * eet
+vars_df$potential_evapotranspiration <- vars_df$eet * 1.26
+
+```
+
+
+## Analysis
+
+### Comparison of the evapotranspiration and the potential evapotranspiration
+
+```{r, warning=FALSE}
+
+ann_evspsbl_et <- vars_df |>
+  mutate(year = year(date)) |>
+  group_by(year) |>
+  summarise(et = sum(evapotranspiration), pet = sum(potential_evapotranspiration))
+
+ann_evspsbl_et |>
+  pivot_longer(cols = c(et, pet), names_to = "Flux") |> 
+  ggplot(aes(x = year, y = value, color = Flux)) +
+  geom_line() +
+  labs(y = "Flux (mm/yr)")
+
+```
+
+
+### Annual totals of evapotranspiration, potential evapotranspiration and precipitation
+
+The evspsbl variable was chosen, as it is a direct variable of the CMIP6ng data and was not calculated indirectly as with the evapotranspiration variable. Which was obtained from the information on pressure, latent heat flux and temperature. As observable in the plot below the data matches very well with the precipiation.
+
+```{r, warning=FALSE}
+
+ann_et_pet_pr <- vars_df |>
+  mutate(year = year(date)) |>
+  group_by(year) |>
+  summarise(et = sum(evapotranspiration), pet = sum(potential_evapotranspiration), prec = sum(precipitation))
+
+# remove year 2014 because data not available for whole year
+ann_et_pet_pr <- ann_et_pet_pr[-1, ]
+
+ann_et_pet_pr |>
+  pivot_longer(cols = c(et, pet, prec), names_to = "Flux") |> 
+  ggplot(aes(x = year, y = value, color = Flux)) +
+  geom_line() +
+  ggtitle("Annual totals of et, pet and prec in Niger")+
+  labs(y = "Flux (mm/yr)")
+
+```
+
+Why are there parts where evapotranspiration is higher than potential evapotranspiration?
+Maybe due to interpolation of pet. Radiation was only monthly available and et daily. Can be huge difference
+if for instance at the beginning of month low radiation values but in the middle of the month there would
+be high values.
+
+**Default GIUB, Latitude 47, Longitude 7.4**
+GIUB, specifically 46.95286466584806 latitude and 7.4351598698922405 longitude.  
+
+
+**Latitude 20, Longitude 30 **
+
+In Sudan, the patterns of evapotranspiration (et) and precipitation (prec) exhibit closely aligned fluctuations, indicating a system constrained by water availability. This suggests that the runoff, the portion of precipitation that does not infiltrate the soil and contributes to streams and rivers, is likely minimal or remains relatively constant over time. Additionally, there is no significant long-term alteration observed in the storage of water resources.
+
+**Latitude 20, Longitude 10**
+Niger, Sahara-desert
+
+potential evapotranspiration negative because calculated with net radiation and the net radiation is negative in deserts. They have a energy loss.
+
+et close to zero because it is so dry. precipitation higher but it will instantly infiltrate in the soil and plants will need it. correct?
+
+**Latitude -5, Longitude -62 **
+Tropics (Amazonas), Longitude 298
+
+
+## Snow Simulation
+
+```{r}
+
+vars_df <- vars_df |>
+  mutate(precipitation = ifelse(temperature < 0, 0, precipitation),
+         snow = ifelse(temperature < 0, precipitation, 0)) |>
+  simulate_snow(varnam_prec = "precipitation", varnam_snow = "snow", varnam_temp = "temperature")
+
+
+vars_df <- vars_df |>
+  mutate(wbal = liquid_to_soil - evapotranspiration, wbal_pet = liquid_to_soil - potential_evapotranspiration)
+
+```
+
+
+## Cumulative Deficit Algorithm
+
+```{r}
+
+# calculate cumulative water deficit
+out_cwd <- cwd(vars_df,
+               varname_wbal = "wbal",
+               varname_date = "date",
+               thresh_terminate = 0.0,
+               thresh_drop = 0.0)
+
+# calculate potential cumulative water deficit
+out_pcwd <- cwd(vars_df,
+               varname_wbal = "wbal_pet",
+               varname_date = "date",
+               thresh_terminate = 0.0,
+               thresh_drop = 0.0)
+
+```
+
+Retain only events of a minimum length of 20 days.
+
+```{r}
+
+out_cwd$inst <- out_cwd$inst |>
+  filter(len >= 20)
+
+out_pcwd$inst <- out_pcwd$inst |>
+  filter(len >= 20)
+
+```
+
+
+
+```{r}
+
+ggplot() +
+  geom_rect(
+    data = out_cwd$inst,
+    aes(xmin = date_start, xmax = date_end, ymin = -99, ymax = 99999),
+    fill = rgb(0,0,0,0.3),
+    color = NA) +
+  geom_line(data  =  out_cwd$df, aes(date, precipitation), size  =  0.3, color = "royalblue") +
+  geom_line(data  =  out_cwd$df, aes(date, deficit), color = "tomato") +
+  coord_cartesian(ylim = c(0, 200)) +
+  theme_classic() +
+  labs(x = "Date", y = "Cumulative water deficit (mm)")
+
+
+```
+
+
+this plot means that from 2020 on Niger will face a continuing water deficit.
+Potential cumulative water deficit should be higher than cwd. 
+
+
+```{r}
+
+ggplot() +
+  geom_rect(
+    data = out_pcwd$inst,
+    aes(xmin = date_start, xmax = date_end, ymin = -99, ymax = 99999),
+    fill = rgb(0,0,0,0.3),
+    color = NA) +
+  geom_line(data  =  out_pcwd$df, aes(date, precipitation), size  =  0.3, color = "royalblue") +
+  geom_line(data  =  out_pcwd$df, aes(date, deficit), color = "tomato") +
+  coord_cartesian(ylim = c(0, 200)) +
+  theme_classic() +
+  labs(x = "Date", y = "Potential cumulative water deficit (mm)")
+
+```
+
+
+
+
+# Literature
+
+Air Pressure | National Oceanic and Atmospheric Administration: https://www.noaa.gov/jetstream/atmosphere/air-pressure, last access: 23 March 2024.
+
+
+
+
+
+
